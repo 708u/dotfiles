@@ -1,0 +1,28 @@
+[core]
+    editor = vim
+    ignorecase = false
+
+[alias]
+    ps = push
+    pl = pull
+    s  = status
+    st = stash
+    stp = stash pop
+    aa = add .
+    gr = log --graph --date=short --decorate=short --pretty=format:'%Cgreen%h %Creset%cd %Cblue%cn %Cred%d %Creset%s'
+    mg = merge
+    cm = commit
+    co = checkout
+    b = branch -v
+
+[fetch]
+    prune = true
+
+[color]
+    ui = true
+
+[merge]
+    tool = vimdiff
+[user]
+    name = 708u
+    email = 708.u.biz@gmail.com
