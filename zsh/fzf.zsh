@@ -5,6 +5,7 @@ if [[ ! "$PATH" == */usr/local/opt/fzf/bin* ]]; then
 fi
 
 export FZF_DEFAULT_OPTS='--reverse'
+export FZF_DEFAULT_COMMAND='fd --type f'
 
 # Auto-completion
 # ---------------
@@ -21,3 +22,13 @@ function select-history() {
 }
 zle -N select-history
 bindkey '^r' select-history
+
+# pad nav display
+zstyle ':fzf-tab:*' fzf-pad 100
+
+# show dir tree
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -T -L 2 --color=always $realpath --long --git-ignore'
+
+# env unset
+zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
+	fzf-preview 'echo ${(P)word}'
