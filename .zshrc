@@ -22,5 +22,8 @@ zinit light-mode for \
 
 ### End of Zinit's installer chunk
 
-# Road zsh configs
-source ./zsh/alias.zsh
+# Load zsh configs
+ZSH_CONF_DIR=$HOME
+source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/alias.zsh
+source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/plugin.zsh
+source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/p10k.zsh
