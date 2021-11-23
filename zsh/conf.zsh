@@ -45,7 +45,7 @@ setopt interactive_comments
 setopt auto_cd
 
 #cd時にファイル全表示
-function chpwd() { ls }
+function chpwd() { lsd }
 
 # cd したら自動的にpushdする
 setopt auto_pushd

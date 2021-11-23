@@ -15,9 +15,9 @@ alias pull='git pull'
 alias git-revert="git reset --hard && git clean -df"
 alias git-softreset="git resett --soft HEAD{1}"
 
-alias la='exa -a'
-alias ll='exa -l'
-alias lla='exa -la'
+alias la='lsd -a'
+alias ll='lsd -l'
+alias lla='lsd -la'
 
 alias dtree='tree -d -I "vendor|node_modules" -N'
 alias cdg='cd $(ghq root)/$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*")'
