@@ -1,0 +1,5 @@
+# Insert your preferred key mappings here.
+map h goBack
+map s scrollPageUp
+map l goForward
+map I LinkHints.activateModeToOpenInNewTab
