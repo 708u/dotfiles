@@ -15,6 +15,7 @@ alias pull='git pull'
 alias git-revert="git reset --hard && git clean -df"
 alias git-softreset="git resett --soft HEAD{1}"
 
+alias ls='lsd'
 alias la='lsd -a'
 alias ll='lsd -l'
 alias lla='lsd -la'
