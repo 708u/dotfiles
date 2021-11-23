@@ -15,13 +15,12 @@ alias pull='git pull'
 alias git-revert="git reset --hard && git clean -df"
 alias git-softreset="git resett --soft HEAD{1}"
 
-alias la='ls -a'
-alias ll='ls -l'
-alias lla='ls -la'
+alias la='exa -a'
+alias ll='exa -l'
+alias lla='exa -la'
 
 alias dtree='tree -d -I "vendor|node_modules" -N'
-alias cdg='cd $(ghq root)/$(ghq list | sort | fzf)'
-alias gcd='ghq get -look `ghq list |fzf --preview "bat --color=always --style=header,grid --line-range :80 $(ghq root)/{}/README.*"`'
+alias cdg='cd $(ghq root)/$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*")'
 
 alias rm='rm -i'
 alias cp='cp -i'
