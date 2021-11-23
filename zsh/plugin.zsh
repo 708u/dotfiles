@@ -11,3 +11,7 @@ fi
 
 zinit light zdharma-continuum/fast-syntax-highlighting
 zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-completions
+zinit light paulirish/git-open
+zinit light Aloxaf/fzf-tab
+zinit light chrissicool/zsh-256color
