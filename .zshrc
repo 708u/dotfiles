@@ -1,3 +1,4 @@
+ZSH_CONF_DIR=$HOME/ghq/github.com/708u/dotfiles
 
 ### Added by Zinit's installer
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
@@ -23,7 +24,8 @@ zinit light-mode for \
 ### End of Zinit's installer chunk
 
 # Load zsh configs
-ZSH_CONF_DIR=$HOME
-source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/alias.zsh
-source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/plugin.zsh
-source $ZSH_CONF_DIR/ghq/github.com/708u/dotfiles/zsh/p10k.zsh
+source $ZSH_CONF_DIR/zsh/alias.zsh
+source $ZSH_CONF_DIR/zsh/conf.zsh
+source $ZSH_CONF_DIR/zsh/plugin.zsh
+source $ZSH_CONF_DIR/zsh/p10k.zsh
+source $ZSH_CONF_DIR/zsh/fzf.zsh
