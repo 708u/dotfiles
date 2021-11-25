@@ -14,6 +14,7 @@ alias push='git push'
 alias pull='git pull'
 alias git-revert="git reset --hard && git clean -df"
 alias git-softreset="git resett --soft HEAD{1}"
+alias hpush="git push -u origin HEAD"
 
 alias ls='lsd'
 alias la='lsd -a'
