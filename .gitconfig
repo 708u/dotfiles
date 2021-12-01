@@ -1,6 +1,7 @@
 [core]
     editor = vim
     ignorecase = false
+	excludesFile = ~/.gitignore_global
 
 [alias]
     ps = push
