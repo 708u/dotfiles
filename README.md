@@ -17,3 +17,12 @@
 ### vimium
 
 - simply copy keyMapping and paste it to vimium option
+
+## local settings
+
+You can create local setting. It is ignored by git.
+
+```bash
+touch ./zsh/.local.zsh
+# you can add setting only used by local environment.
+```

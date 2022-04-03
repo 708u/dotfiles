@@ -23,6 +23,11 @@ zinit light-mode for \
 
 ### End of Zinit's installer chunk
 
+# Load local config
+if [ -f $ZSH_CONF_DIR/zsh/.local.zsh ]; then
+    source $ZSH_CONF_DIR/zsh/.local.zsh
+fi
+
 # Load zsh configs
 source $ZSH_CONF_DIR/zsh/alias.zsh
 source $ZSH_CONF_DIR/zsh/conf.zsh
