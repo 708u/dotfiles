@@ -20,6 +20,7 @@ alias ls='lsd'
 alias la='lsd -a'
 alias ll='lsd -l'
 alias lla='lsd -la'
+alias j='just'
 
 alias dtree='tree -d -I "vendor|node_modules" -N'
 alias cdg='cd $(ghq root)/$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*")'
@@ -31,6 +32,7 @@ alias mv='mv -i'
 alias mkdir='mkdir -p'
 
 # ruby
+alias be="bundle exec"
 alias ber="bundle exec rails"
 
 # sudo の後のコマンドでエイリアスを有効にする
