@@ -35,7 +35,7 @@ bindkey '^r' select-history
 zstyle ':fzf-tab:*' fzf-pad 100
 
 # show dir tree
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -T -L 2 --color=always $realpath --long --git-ignore'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -T -L 2 --color=always $realpath --git-ignore'
 
 # env unset
 zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
