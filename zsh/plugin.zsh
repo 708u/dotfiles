@@ -15,3 +15,7 @@ zinit light zsh-users/zsh-completions
 zinit light paulirish/git-open
 zinit light Aloxaf/fzf-tab
 zinit light chrissicool/zsh-256color
+zinit light supercrabtree/k
+
+zinit snippet OMZL::clipboard.zsh
+zinit snippet OMZP::copypath
