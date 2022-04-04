@@ -24,9 +24,4 @@ make install
 
 ## local settings
 
-You can create local setting. It is ignored by git.
-
-```bash
-touch ./zsh/.local.zsh
-# you can add setting only used by local environment.
-```
+You can add local environment settings in `zsh/.local.zsh`.

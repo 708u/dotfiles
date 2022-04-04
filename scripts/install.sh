@@ -6,3 +6,5 @@ do
         ln -s $(pwd)/${file} ~/${file}
     fi
 done
+
+touch $(pwd)/zsh/.local.zsh
