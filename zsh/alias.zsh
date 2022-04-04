@@ -31,10 +31,6 @@ alias mv='mv -i'
 
 alias mkdir='mkdir -p'
 
-# ruby
-alias be="bundle exec"
-alias ber="bundle exec rails"
-
 # sudo の後のコマンドでエイリアスを有効にする
 alias sudo='sudo '
 
