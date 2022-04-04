@@ -2,6 +2,10 @@
 
 ## manual install
 
+```sh
+make install
+```
+
 ### iterm2
 
 - open iterm2 preferences
