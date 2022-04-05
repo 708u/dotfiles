@@ -22,6 +22,8 @@ alias ll='lsd -l'
 alias lla='lsd -la'
 alias j='just'
 
+alias relogin='exec $SHELL -l'
+
 alias dtree='tree -d -I "vendor|node_modules" -N'
 alias cdg='cd $(ghq root)/$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*")'
 
