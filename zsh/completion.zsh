@@ -1,6 +1,12 @@
 # Load user defined completions
 fpath=( $ZSH_CONF_DIR/zsh/completion "${fpath[@]}")
 
+# if following error 'Ignore insecure directories and continue [y] or abort compinit [n]?' returned, exec it
+# `chmod -R go-w /usr/local/share`
+if type brew &>/dev/null; then
+  fpath=($(brew --prefix)/share/zsh-completions "${fpath[@]}")
+fi
+
 # for local completions
 fpath=( $ZSH_CONF_DIR/zsh/completion/.local "${fpath[@]}")
 
