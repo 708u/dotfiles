@@ -24,4 +24,4 @@ make install
 
 ## local settings
 
-You can add local environment settings in `zsh/.local.zsh`.
+You can add local environment settings in `zsh/.local.zsh`. Also can add completions used only local environment to `zsh/completion/.local`.
