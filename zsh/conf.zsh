@@ -7,8 +7,6 @@ HISTSIZE=100000
 # 上述のファイルに保存する履歴のサイズ
 SAVEHIST=1000000
 
-autoload -Uz compinit && compinit
-
 # 色を使用出来るようにする
 autoload -Uz colors
 colors

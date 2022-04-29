@@ -3,3 +3,4 @@
 
 # local environment setting
 zsh/.local.zsh
+zsh/completion/.local

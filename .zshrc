@@ -31,7 +31,7 @@ fi
 # Load zsh configs
 source $ZSH_CONF_DIR/zsh/alias.zsh
 source $ZSH_CONF_DIR/zsh/conf.zsh
-source $ZSH_CONF_DIR/zsh/completion/main.zsh
+source $ZSH_CONF_DIR/zsh/completion.zsh
 source $ZSH_CONF_DIR/zsh/plugin.zsh
 source $ZSH_CONF_DIR/zsh/p10k.zsh
 source $ZSH_CONF_DIR/zsh/fzf.zsh

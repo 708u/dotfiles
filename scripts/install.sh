@@ -8,3 +8,4 @@ do
 done
 
 touch $(pwd)/zsh/.local.zsh
+mkdir -p $(pwd)/zsh/completion/.local
