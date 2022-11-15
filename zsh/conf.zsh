@@ -1,6 +1,6 @@
 export LANG=ja_JP.UTF-8
 export PAGER=less
-export EDITOR=vi
+export EDITOR=code
 
 # メモリ上に保存する履歴のサイズ
 HISTSIZE=100000

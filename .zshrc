@@ -35,3 +35,4 @@ source $ZSH_CONF_DIR/zsh/completion.zsh
 source $ZSH_CONF_DIR/zsh/plugin.zsh
 source $ZSH_CONF_DIR/zsh/p10k.zsh
 source $ZSH_CONF_DIR/zsh/fzf.zsh
+source $ZSH_CONF_DIR/zsh/direnv.zsh
