@@ -56,4 +56,5 @@ setopt extended_glob
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
 
+export PATH="$PATH:$HOME/bin"
 eval "$(anyenv init -)"
