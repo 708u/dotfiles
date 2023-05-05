@@ -42,7 +42,7 @@ zstyle ':fzf-tab:*' fzf-pad 100
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -T -L 2 --color=always $realpath --git-ignore'
 
 # Enable multi select in tab completions using tab and shift tab
-zstyle ':fzf-tab:complete:*' fzf-bindings 'tab:toggle+down,shift-tab:toggle+up'
+zstyle ':fzf-tab:complete:*' fzf-bindings 'space:toggle+down'
 
 # env unset
 zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
