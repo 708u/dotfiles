@@ -1,5 +1,6 @@
 # Insert your preferred key mappings here.
 map h goBack
-map s scrollPageUp
+map , scrollPageUp
+map m scrollPageDown
 map l goForward
 map I LinkHints.activateModeToOpenInNewTab
