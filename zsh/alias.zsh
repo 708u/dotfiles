@@ -21,6 +21,7 @@ alias la='lsd -a'
 alias ll='lsd -l'
 alias lla='lsd -la'
 alias j='just'
+alias tf='terraform'
 
 alias relogin='exec $SHELL -l'
 

@@ -1,3 +1,6 @@
+autoload -Uz compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
+
 # Load user defined completions
 fpath=( $ZSH_CONF_DIR/zsh/completion "${fpath[@]}")
 
@@ -6,6 +9,9 @@ fpath=( $ZSH_CONF_DIR/zsh/completion "${fpath[@]}")
 if type brew &>/dev/null; then
   fpath=($(brew --prefix)/share/zsh-completions "${fpath[@]}")
 fi
+
+# terraform completion
+complete -o nospace -C /opt/homebrew/Cellar/tfenv/2.2.3/versions/1.2.2/terraform terraform
 
 # for local completions
 fpath=( $ZSH_CONF_DIR/zsh/completion/.local "${fpath[@]}")
@@ -25,5 +31,3 @@ zstyle ':completion:＊:sudo:＊' command-path /usr/local/sbin /usr/local/bin \
 
 # complement make targets
 zstyle ':completion:*:*:make:*' tag-order 'targets'
-
-autoload -Uz compinit && compinit
