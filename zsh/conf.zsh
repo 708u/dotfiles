@@ -56,5 +56,16 @@ setopt extended_glob
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
 
+# adb tools
+export ANDROID_HOME=${HOME}/Library/Android/sdk
+if [ -d "${ANDROID_HOME}" ]; then
+  export PATH="${ANDROID_HOME}/bin:$PATH"
+fi
+
+export ANDROID_TOOL_PATH=${ANDROID_HOME}/platform-tools
+if [ -d "${ANDROID_TOOL_PATH}" ]; then
+  export PATH="${ANDROID_TOOL_PATH}:$PATH"
+fi
+
 export PATH="$PATH:$HOME/bin"
 eval "$(anyenv init -)"
