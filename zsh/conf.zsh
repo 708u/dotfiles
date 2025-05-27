@@ -69,3 +69,6 @@ fi
 
 export PATH="$PATH:$HOME/bin"
 eval "$(anyenv init -)"
+
+# zoxide
+eval "$(zoxide init zsh)"
