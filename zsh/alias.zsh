@@ -15,6 +15,7 @@ alias pull='git pull'
 alias git-revert="git reset --hard && git clean -df"
 alias git-softreset="git resett --soft HEAD{1}"
 alias hpush="git push -u origin HEAD"
+alias docker-stats="docker stats --format "table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}""
 
 alias ls='lsd'
 alias la='lsd -a'
