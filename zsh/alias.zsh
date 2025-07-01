@@ -42,3 +42,5 @@ alias sudo='sudo '
 alias -g L='| less'
 alias -g G='| grep'
 alias grep='grep --color=auto'
+
+alias c="claude"
