@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(pushd:*)",
+      "Bash(popd:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser:*",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_tab_select",
+      "mcp__playwright__browser_tab_list",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_pdf_save",
+      "mcp__playwright__browser_tab_close",
+      "mcp__asana__asana:*",
+      "mcp__asana__asana_typeahead_search",
+      "mcp__asana__asana_search_tasks",
+      "mcp__asana__asana_get_task",
+      "mcp__asana__asana_create_task",
+      "mcp__github__get_pull_request",
+      "mcp__github__update_pull_request"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["github", "figma", "deepwiki", "playwright"],
+  "preferredNotifChannel": "terminal_bel"
+}
