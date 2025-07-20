@@ -119,3 +119,13 @@ echo "現在のブランチのPR番号: #$PR_NUMBER"
 
 **重要: co-authorにclaudeを含めないこと**
 理由: 作業者が不明瞭になる
+
+## markdownの変更時
+
+markdownlintの指摘事項に抵触しないようにmarkdownを変更します。
+
+例: コードブロックを利用するときは必ず言語を指定
+
+```txt
+hello world
+```

@@ -18,7 +18,11 @@
           },
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path | select(endswith(\".go\"))' | xargs -r terraform fmt"
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".md\"))' | xargs -r markdownlint-cli2 --fix"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".tf\") or endswith(\".tftest.hcl\"))' | xargs -r terraform fmt"
           }
         ]
       },
@@ -27,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[$(date)] $USER: $(jq -r '.tool_input.command')\" >> ~/.claude/command_history.log"
+            "command": "mkdir -p ~/.claude/out/command_history && echo \"[$(date)] $USER: $(jq -r '.tool_input.command')\" >> ~/.claude/out/command_history/$(date +%Y-%m-%d).log"
           }
         ]
       }
