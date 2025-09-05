@@ -64,6 +64,10 @@ echo "現在のブランチのPR番号: #$PR_NUMBER"
   - 原因：`gh pr view`の結果を見たが、PR番号の確認を怠った
   - 対策：上記の確認手順を必ず実行する
 
+### PR上にcommentするとき
+
+**重要**: 必ず自分自身がclaude codeであることをcommentに含めること
+
 ## Asana API操作の知見
 
 ### タスク検索の注意点
@@ -128,4 +132,10 @@ markdownlintの指摘事項に抵触しないようにmarkdownを変更します
 
 ```txt
 hello world
+```
+
+例: MD013/line-length を遵守します。
+
+```txt
+[Expected: 80; Actual: 108]
 ```
