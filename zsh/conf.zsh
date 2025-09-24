@@ -68,6 +68,7 @@ if [ -d "${ANDROID_TOOL_PATH}" ]; then
 fi
 
 export PATH="$PATH:$HOME/bin"
+export PATH="$PATH:$HOME/.local/bin"
 eval "$(anyenv init -)"
 
 # zoxide
