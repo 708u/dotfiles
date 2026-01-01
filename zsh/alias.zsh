@@ -43,4 +43,4 @@ alias -g L='| less'
 alias -g G='| grep'
 alias grep='grep --color=auto'
 
-alias c="claude"
+alias c="claude --chrome"
