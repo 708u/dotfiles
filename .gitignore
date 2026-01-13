@@ -6,3 +6,4 @@ zsh/.local.zsh
 zsh/completion/.local
 
 claude/.claude.json
+tmp

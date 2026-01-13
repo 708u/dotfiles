@@ -12,3 +12,8 @@
 # Built Visual Studio Code Extensions
 *.vsix
 .DS_Store
+
+# twig
+settings.local.toml
+# Claude Code prompt file
+.twig-claude-prompt-completed.sh
