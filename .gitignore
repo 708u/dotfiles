@@ -7,3 +7,6 @@ zsh/completion/.local
 
 claude/.claude.json
 tmp
+
+# claude
+.claude/settings.local.json
