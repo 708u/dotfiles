@@ -7,7 +7,24 @@
 - 仕様について文書を書くとき、指示を受けている場合を除き不要な文脈の注釈を入れないこと
   - 例: DBのtable設計時、tableやcolumn名について言及しただけでメンテナンスコストが削減できる、等を箇条書きで列挙する
 
-## GitHub PR操作の注意事項 🚨
+## GitHub PR操作の注意事項
+
+### PR update
+
+重要: PR更新には `gh pr edit` ではなく  `gh api repos/708u/twig/pulls/${PR_NUMBER} -X PATCH` を使うこと。
+理由: gh pr editは deprecatedになっているため
+
+```txt
+⏺ Bash(gh pr edit 86 --body "## Overview…)
+  ⎿  Error: Exit code 1
+     GraphQL: Projects (classic) is being deprecated in favor of the new Projects experience, see:
+     https://github.blog/changelog/2024-05-23-sunset-notice-projects-classic/.
+     (repository.pullRequest.projectCards)
+```
+
+### failしたCIの修正をするとき
+
+修正をcommitしpushした後、ciをwatchすること。failした場合、原因を調査し、再帰的に修正されるまで対応すること。
 
 ### descriptionを書くとき
 
@@ -42,11 +59,6 @@ echo "現在のブランチのPR番号: #$PR_NUMBER"
 ### PR上にcommentするとき
 
 **重要**: 必ず自分自身がclaude codeであることをcommentに含めること
-
-## Github操作の知見
-
-- **重要: ghコマンドの仕様を禁止する。代わりにgithub mcpを必ず利用すること**
-  - 例外: github mcpで解決できない処理の場合のみ許可する
 
 ## Asana API操作の知見
 
@@ -93,10 +105,6 @@ echo "現在のブランチのPR番号: #$PR_NUMBER"
 **import pathとコード追記を同時に行う必要があります。**
 理由: コード変更後にpost run hookでformatterが走るので、使用されないimport pathは即座に消されてしまうため。
 
-## 実装中に困ったとき
-
-技術的に詰まったところやわからないところ、解決できないエラーなどがあればo3 mcpに英語で相談して。
-
 ## git操作
 
 ### commit時
@@ -119,3 +127,22 @@ hello world
 ```txt
 [Expected: 80; Actual: 108]
 ```
+
+## chrome mcp
+
+### 操作
+
+Claude for Chrome MCPを利用するとき、一つのブラウザ操作ごとに Task で
+サブエージェントに委譲すること。これにより、メインコンテキストを節約できる。
+
+注意:
+
+- chrome操作以外の処理をTaskに依頼しないこと
+- 複数の操作を一度に依頼しないこと
+
+## cli
+
+### rmを使うとき
+
+-f を使うこと。
+理由: rm のみの場合、対話的な実行になり、実行できないため
