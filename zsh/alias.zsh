@@ -27,7 +27,10 @@ alias tf='terraform'
 alias relogin='exec $SHELL -l'
 
 alias dtree='tree -d -I "vendor|node_modules" -N'
-alias cdg='cd $(ghq root)/$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*")'
+cdg() {
+  local _cdg_selected
+  _cdg_selected=$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*") && cd "$(ghq root)/$_cdg_selected"
+}
 
 alias rm='rm -i'
 alias cp='cp -i'
@@ -43,4 +46,33 @@ alias -g L='| less'
 alias -g G='| grep'
 alias grep='grep --color=auto'
 
-alias c="claude --chrome"
+alias c="claude --debug"
+
+# twig
+alias twig-switch='cd $(twig list -q | fzf)'
+
+twig-cd() {
+  local wt_path=$(twig add -q "$@")
+  local ws_file=$(find "$wt_path" -maxdepth 1 -name "*.code-workspace" 2>/dev/null | head -1)
+  if [ -n "$ws_file" ]; then
+    code "$ws_file"
+  else
+    code "$wt_path"
+  fi
+}
+
+twig-c() {
+  local wt_path=$(twig add -q "$1")
+  shift
+  if [ $# -gt 0 ]; then
+    echo "$*" > "$wt_path/.twig-claude-prompt"
+  else
+    touch "$wt_path/.twig-claude-prompt"
+  fi
+  local ws_file=$(find "$wt_path" -maxdepth 1 -name "*.code-workspace" 2>/dev/null | head -1)
+  if [ -n "$ws_file" ]; then
+    code "$ws_file"
+  else
+    code "$wt_path"
+  fi
+}
