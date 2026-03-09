@@ -33,3 +33,18 @@ if [ ! -f ~/.config/zellij/config.kdl ]; then
     mkdir -p ~/.config/zellij
     ln -s $(pwd)/.config/zellij/config.kdl ~/.config/zellij/config.kdl
 fi
+
+# claude
+mkdir -p ~/.claude
+for file in CLAUDE.md settings.json settings.local.json statusline.sh
+do
+    if [ ! -f ~/.claude/${file} ]; then
+        ln -s $(pwd)/.config/claude/${file} ~/.claude/${file}
+    fi
+done
+for dir in agents commands skills
+do
+    if [ ! -d ~/.claude/${dir} ]; then
+        ln -s $(pwd)/.config/claude/${dir} ~/.claude/${dir}
+    fi
+done
