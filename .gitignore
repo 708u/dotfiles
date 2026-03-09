@@ -10,3 +10,9 @@ tmp
 
 # claude
 .claude/settings.local.json
+
+# karabiner
+.config/karabiner/automatic_backups/
+.config/karabiner/assets/
+
+node_modules/
