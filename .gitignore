@@ -9,6 +9,7 @@ tmp
 
 # claude
 .claude/settings.local.json
+.config/claude/settings.local.json
 
 # karabiner
 .config/karabiner/automatic_backups/
