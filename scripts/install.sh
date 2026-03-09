@@ -15,3 +15,21 @@ if [ ! -d ~/.config/karabiner ]; then
     mkdir -p ~/.config
     ln -s $(pwd)/.config/karabiner ~/.config/karabiner
 fi
+
+# ghostty
+if [ ! -d ~/.config/ghostty ]; then
+    mkdir -p ~/.config
+    ln -s $(pwd)/.config/ghostty ~/.config/ghostty
+fi
+
+# gh
+if [ ! -f ~/.config/gh/config.yml ]; then
+    mkdir -p ~/.config/gh
+    ln -s $(pwd)/.config/gh/config.yml ~/.config/gh/config.yml
+fi
+
+# zellij
+if [ ! -f ~/.config/zellij/config.kdl ]; then
+    mkdir -p ~/.config/zellij
+    ln -s $(pwd)/.config/zellij/config.kdl ~/.config/zellij/config.kdl
+fi

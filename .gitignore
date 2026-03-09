@@ -15,4 +15,7 @@ tmp
 .config/karabiner/automatic_backups/
 .config/karabiner/assets/
 
+# gh credentials
+.config/gh/hosts.yml
+
 node_modules/
