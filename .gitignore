@@ -5,7 +5,6 @@
 zsh/.local.zsh
 zsh/completion/.local
 
-claude/.claude.json
 tmp
 
 # claude
@@ -17,5 +16,3 @@ tmp
 
 # gh credentials
 .config/gh/hosts.yml
-
-node_modules/
