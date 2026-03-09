@@ -73,3 +73,12 @@ eval "$(anyenv init -)"
 
 # zoxide
 eval "$(zoxide init zsh)"
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"

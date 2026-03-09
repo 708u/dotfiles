@@ -46,10 +46,13 @@ alias -g L='| less'
 alias -g G='| grep'
 alias grep='grep --color=auto'
 
-alias c="claude --debug"
+alias c="claude"
 
 # twig
-alias twig-switch='cd $(twig list -q | fzf)'
+twig-switch() {
+  local _target=$(twig list -q | fzf)
+  [ -n "$_target" ] && cd "$_target"
+}
 
 twig-cd() {
   local wt_path=$(twig add -q "$@")
