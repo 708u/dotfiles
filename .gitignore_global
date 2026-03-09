@@ -16,4 +16,4 @@
 # twig
 settings.local.toml
 # Claude Code prompt file
-.twig-claude-prompt-completed.sh
+.completed-twig-claude-prompt.sh
