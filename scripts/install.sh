@@ -36,7 +36,7 @@ fi
 
 # claude
 mkdir -p ~/.claude
-for file in CLAUDE.md settings.json settings.local.json statusline.sh
+for file in CLAUDE.md settings.json statusline.sh
 do
     if [ ! -f ~/.claude/${file} ]; then
         ln -s $(pwd)/.config/claude/${file} ~/.claude/${file}
