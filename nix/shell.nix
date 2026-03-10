@@ -74,6 +74,7 @@
   };
 
   home.sessionPath = [
+    "/usr/local/go/bin"
     "$GOPATH/bin"
     "$HOME/bin"
     "$HOME/.local/bin"
