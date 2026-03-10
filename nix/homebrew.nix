@@ -9,6 +9,7 @@
     };
 
     taps = [
+      "708u/tap"
       "qmk/qmk"
       "k1low/tap"
       "stripe/stripe-cli"
