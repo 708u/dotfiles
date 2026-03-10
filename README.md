@@ -16,14 +16,14 @@ git clone https://github.com/708u/dotfiles.git \
 cd ~/ghq/github.com/708u/dotfiles
 
 # 3. セットアップ
-make install
+make apply
 ```
 
 ## 日常操作
 
 ```bash
-# 設定変更後の反映
-make rebuild
+# 設定の反映
+make apply
 
 # flake の更新
 make update
