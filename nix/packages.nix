@@ -1,13 +1,17 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
+    awscli2
     bat
     buf
+    circleci-cli
     clang-tools
+    colima
     coreutils
     deno
     direnv
     dive
+    envchain
     eza
     fd
     figlet
@@ -16,6 +20,8 @@
     ghq
     git
     gnugrep
+    gogcli
+    goku
     graphviz
     grpcurl
     hyperfine
@@ -30,11 +36,14 @@
     procs
     protobuf
     ripgrep
+    saml2aws
     shellcheck
     terminal-notifier
+    tflint
     tig
     tmux
     tree
+    trufflehog
     uv
     wget
     yarn
