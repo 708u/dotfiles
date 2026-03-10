@@ -16,10 +16,6 @@
     ];
 
     brews = [
-      "ansible"
-      "docutils"
-      "gobject-introspection"
-      "libpng"
       "mas"
       "qmk/qmk/qmk"
       "qmmp"
