@@ -39,7 +39,7 @@
             home-manager.users.${username} = import ./nix/home.nix;
           }
         ];
-        specialArgs = { inherit inputs username; };
+        specialArgs = { inherit inputs username hostname; };
       };
     };
 }
