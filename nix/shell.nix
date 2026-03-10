@@ -1,8 +1,4 @@
-{ config, lib, ... }:
-let
-  dotfilesDir =
-    "${config.home.homeDirectory}/ghq/github.com/708u/dotfiles";
-in
+{ dotfilesDir, lib, ... }:
 {
   programs.zsh = {
     enable = true;
