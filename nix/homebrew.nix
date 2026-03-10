@@ -10,33 +10,22 @@
 
     taps = [
       "qmk/qmk"
-      "yqrashawn/goku"
       "k1low/tap"
-      "steipete/tap"
       "stripe/stripe-cli"
     ];
 
     brews = [
       "ansible"
       "anyenv"
-      "awscli"
-      "circleci"
-      "colima"
       "docutils"
-      "envchain"
       "gobject-introspection"
       "libpng"
       "mas"
       "qmk/qmk/qmk"
       "qmmp"
-      "saml2aws"
       "serverless"
-      "steipete/tap/gogcli"
       "stripe/stripe-cli/stripe"
       "tfenv"
-      "tflint"
-      "trufflehog"
-      "yqrashawn/goku/goku"
       "k1low/tap/tbls"
       "k1low/tap/tbls-ask"
     ];
