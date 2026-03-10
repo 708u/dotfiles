@@ -43,7 +43,6 @@
       "ghostty"
       "google-chrome"
       "google-japanese-ime"
-      "goreleaser"
       "iterm2"
       "karabiner-elements"
       "ngrok"

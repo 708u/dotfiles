@@ -15,8 +15,8 @@ git clone https://github.com/708u/dotfiles.git \
   ~/ghq/github.com/708u/dotfiles
 cd ~/ghq/github.com/708u/dotfiles
 
-# 3. セットアップ
-make apply
+# 3. 初回セットアップ
+make bootstrap
 ```
 
 ## 日常操作

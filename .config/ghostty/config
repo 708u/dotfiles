@@ -1,3 +1,4 @@
+command = /bin/zsh
 font-family = HackGen35Nerd
 
 cursor-style = block
