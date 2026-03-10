@@ -16,7 +16,6 @@
 
     brews = [
       "ansible"
-      "anyenv"
       "docutils"
       "gobject-introspection"
       "libpng"
@@ -25,7 +24,6 @@
       "qmmp"
       "serverless"
       "stripe/stripe-cli/stripe"
-      "tfenv"
       "k1low/tap/tbls"
       "k1low/tap/tbls-ask"
     ];
