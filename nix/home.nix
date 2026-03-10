@@ -4,6 +4,7 @@
     ./packages.nix
     ./git.nix
     ./mise.nix
+    ./shell.nix
   ];
 
   home.stateVersion = "24.11";

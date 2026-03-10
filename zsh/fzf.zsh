@@ -1,15 +1,3 @@
-export FZF_DEFAULT_OPTS='--reverse'
-export FZF_DEFAULT_COMMAND='fd --type f'
-
-# fzf shell integration (completion + key bindings)
-if command -v fzf >/dev/null 2>&1; then
-  eval "$(fzf --zsh 2>/dev/null)" || {
-    local fzf_share="$(fzf-share 2>/dev/null)"
-    [[ -f "$fzf_share/completion.zsh" ]] && source "$fzf_share/completion.zsh"
-    [[ -f "$fzf_share/key-bindings.zsh" ]] && source "$fzf_share/key-bindings.zsh"
-  }
-fi
-
 # fzf履歴検索
 function select-history() {
  BUFFER=$(history -n -r 1 | fzf --no-sort +m --query "$LBUFFER" --prompt="History > ")
