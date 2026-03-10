@@ -67,4 +67,20 @@ in
   programs.zoxide = {
     enable = true;
   };
+
+  home.sessionVariables = {
+    LANG = "ja_JP.UTF-8";
+    PAGER = "less";
+    EDITOR = "code";
+    GOPATH = "$HOME/go";
+    PNPM_HOME = "$HOME/Library/pnpm";
+    CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
+  };
+
+  home.sessionPath = [
+    "$GOPATH/bin"
+    "$HOME/bin"
+    "$HOME/.local/bin"
+    "$PNPM_HOME"
+  ];
 }
