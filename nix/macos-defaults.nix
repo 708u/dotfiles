@@ -61,12 +61,6 @@
       "com.apple.AppleMultitouchTrackpad" = {
         TrackpadRightClick = false;
       };
-      "com.apple.Safari" = {
-        IncludeDevelopMenu = true;
-        WebKitDeveloperExtrasEnabledPreferenceKey = true;
-        "WebKitPreferences.developerExtrasEnabled" = true;
-        ExtensionsEnabled = true;
-      };
       NSGlobalDomain = {
         AppleAccentColor = 1;
         AppleHighlightColor =
