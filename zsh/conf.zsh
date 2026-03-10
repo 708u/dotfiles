@@ -1,7 +1,3 @@
-export LANG=ja_JP.UTF-8
-export PAGER=less
-export EDITOR=code
-
 # メモリ上に保存する履歴のサイズ
 HISTSIZE=100000
 
@@ -23,7 +19,7 @@ setopt no_flow_control
 # Ctrl+Dでzshを終了しない
 setopt ignore_eof
 
-# ‘#’ 以降をコメントとして扱う
+# '#' 以降をコメントとして扱う
 setopt interactive_comments
 
 # ディレクトリ名だけでcdする
@@ -53,9 +49,6 @@ setopt hist_reduce_blanks
 # 高機能なワイルドカード展開を使用する
 setopt extended_glob
 
-export GOPATH="$HOME/go"
-export PATH="$PATH:$GOPATH/bin"
-
 # adb tools
 export ANDROID_HOME=${HOME}/Library/Android/sdk
 if [ -d "${ANDROID_HOME}" ]; then
@@ -66,16 +59,3 @@ export ANDROID_TOOL_PATH=${ANDROID_HOME}/platform-tools
 if [ -d "${ANDROID_TOOL_PATH}" ]; then
   export PATH="${ANDROID_TOOL_PATH}:$PATH"
 fi
-
-export PATH="$PATH:$HOME/bin"
-export PATH="$PATH:$HOME/.local/bin"
-
-
-# pnpm
-export PNPM_HOME="$HOME/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-
-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"

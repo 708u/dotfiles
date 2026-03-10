@@ -18,7 +18,7 @@ bindkey '^r' select-history
 zstyle ':fzf-tab:*' fzf-pad 100
 
 # show dir tree
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -T -L 2 --color=always $realpath --git-ignore'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -T -L 2 --color=always $realpath --git-ignore'
 
 # Enable multi select in tab completions using tab and shift tab
 zstyle ':fzf-tab:complete:*' fzf-bindings 'space:toggle+down'
