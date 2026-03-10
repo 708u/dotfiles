@@ -72,6 +72,6 @@
   };
 
   system.activationScripts.postActivation.text = ''
-    osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true'
+    osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true' || true
   '';
 }
