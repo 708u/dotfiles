@@ -34,6 +34,8 @@
     just
     lazydocker
     lsd
+    mutagen
+    mutagen-compose
     mysql84
     parallel
     pnpm
