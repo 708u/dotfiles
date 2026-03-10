@@ -1,4 +1,4 @@
-{ pkgs, username, ... }:
+{ pkgs, username, hostname, ... }:
 {
   imports = [
     ./homebrew.nix
@@ -17,6 +17,9 @@
     name = username;
     home = "/Users/${username}";
   };
+
+  networking.hostName = hostname;
+  networking.localHostName = hostname;
 
   security.pam.services.sudo_local.touchIdAuth = true;
 }
