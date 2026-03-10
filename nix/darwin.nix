@@ -1,6 +1,9 @@
 { pkgs, username, ... }:
 {
-  imports = [ ./homebrew.nix ];
+  imports = [
+    ./homebrew.nix
+    ./macos-defaults.nix
+  ];
 
   nixpkgs.config.allowUnfree = true;
 
