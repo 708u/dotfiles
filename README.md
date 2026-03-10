@@ -1,27 +1,35 @@
-# Dotfiles
+# dotfiles
 
-## manual install
+nix-darwin + home-manager で管理する macOS 環境構築。
 
-```sh
+## Bootstrap
+
+```bash
+# 1. Nix をインストール
+curl --proto '=https' --tlsv1.2 -sSf -L \
+  https://install.determinate.systems/nix | sh -s -- install
+
+# 2. リポジトリをクローン
+mkdir -p ~/ghq/github.com/708u
+git clone https://github.com/708u/dotfiles.git \
+  ~/ghq/github.com/708u/dotfiles
+cd ~/ghq/github.com/708u/dotfiles
+
+# 3. セットアップ
 make install
 ```
 
-### iterm2
+## 日常操作
 
-- open iterm2 preferences
-- check `General > Preferences > Load preferences from a custom folder or URL`
-- set path `/Users/708u/ghq/github.com/708u/dotfiles/.config/iterm2`
+```bash
+# 設定変更後の反映
+make rebuild
 
-### karabiner
+# flake の更新
+make update
+```
 
-- open karebiner preferences
-- click Misc > Export & Import
-- import `config/karabiner/karabiner.json` from this repo.
+## ローカル設定
 
-### vimium
-
-- simply copy keyMapping and paste it to vimium option
-
-## local settings
-
-You can add local environment settings in `zsh/.local.zsh`. Also can add completions used only local environment to `zsh/completion/.local`.
+`zsh/.local.zsh` にローカル環境固有の設定を追加できる。
+`zsh/completion/.local` にローカル専用の補完を追加できる。
