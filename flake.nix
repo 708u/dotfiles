@@ -24,6 +24,7 @@
       system = "aarch64-darwin";
       username = "708u";
       hostname = "708uMacBookPro";
+      dotfilesDir = "/Users/${username}/ghq/github.com/708u/dotfiles";
     in
     {
       darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
@@ -34,6 +35,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit dotfilesDir; };
             home-manager.users.${username} = import ./nix/home.nix;
           }
         ];

@@ -1,7 +1,5 @@
-{ config, ... }:
+{ config, dotfilesDir, ... }:
 let
-  dotfilesDir =
-    "${config.home.homeDirectory}/ghq/github.com/708u/dotfiles";
   mkSymlink = path:
     config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/${path}";
 in
