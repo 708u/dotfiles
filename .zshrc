@@ -1,3 +1,5 @@
+export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
+
 ZSH_CONF_DIR=$HOME/ghq/github.com/708u/dotfiles
 
 ### Added by Zinit's installer

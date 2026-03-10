@@ -1,5 +1,6 @@
 .DS_Store
 .vscode
+result
 
 # local environment setting
 zsh/.local.zsh

@@ -1,0 +1,41 @@
+{ pkgs, ... }:
+{
+  home.packages = with pkgs; [
+    bat
+    buf
+    coreutils
+    deno
+    dive
+    eza
+    fd
+    figlet
+    fzf
+    gh
+    ghq
+    git
+    graphviz
+    grpcurl
+    hyperfine
+    # jp2a  # nixpkgs で broken
+    jq
+    just
+    lazydocker
+    lsd
+    mysql84
+    parallel
+    pnpm
+    procs
+    protobuf
+    ripgrep
+    shellcheck
+    terminal-notifier
+    tig
+    tmux
+    tree
+    uv
+    wget
+    yarn
+    zellij
+    zsh-completions
+  ];
+}
