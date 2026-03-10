@@ -49,6 +49,7 @@
     tree
     trufflehog
     uv
+    vscode
     wget
     yarn
     zellij
