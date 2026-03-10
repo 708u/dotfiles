@@ -1,22 +1,13 @@
-# Setup fzf
-# ---------
-if [[ ! "$PATH" == */usr/local/opt/fzf/bin* ]]; then
-  export PATH="${PATH:+${PATH}:}/usr/local/opt/fzf/bin"
-fi
-
 export FZF_DEFAULT_OPTS='--reverse'
 export FZF_DEFAULT_COMMAND='fd --type f'
 
-# Auto-completion
-# ---------------
-[[ $- == *i* ]] && source "/usr/local/opt/fzf/shell/completion.zsh" 2> /dev/null
-
-# Key bindings
-# ------------
-if [ "$(uname -m)" = "arm64" ]; then
-  source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
-else
-  source "/usr/local/opt/fzf/shell/key-bindings.zsh"
+# fzf shell integration (completion + key bindings)
+if command -v fzf >/dev/null 2>&1; then
+  eval "$(fzf --zsh 2>/dev/null)" || {
+    local fzf_share="$(fzf-share 2>/dev/null)"
+    [[ -f "$fzf_share/completion.zsh" ]] && source "$fzf_share/completion.zsh"
+    [[ -f "$fzf_share/key-bindings.zsh" ]] && source "$fzf_share/key-bindings.zsh"
+  }
 fi
 
 # fzf履歴検索

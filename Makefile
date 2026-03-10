@@ -2,10 +2,10 @@
 
 install:
 	@./scripts/install.sh
-	sudo nix run nix-darwin -- switch --flake .
+	darwin-rebuild switch --flake .
 
 rebuild:
-	sudo nix run nix-darwin -- switch --flake .
+	darwin-rebuild switch --flake .
 
 update:
 	nix flake update

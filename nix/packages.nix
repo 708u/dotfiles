@@ -3,8 +3,10 @@
   home.packages = with pkgs; [
     bat
     buf
+    clang-tools
     coreutils
     deno
+    direnv
     dive
     eza
     fd
@@ -13,6 +15,7 @@
     gh
     ghq
     git
+    gnugrep
     graphviz
     grpcurl
     hyperfine
@@ -36,6 +39,8 @@
     wget
     yarn
     zellij
+    zoxide
+    zsh
     zsh-completions
   ];
 }

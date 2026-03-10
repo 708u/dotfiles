@@ -11,7 +11,9 @@ if type brew &>/dev/null; then
 fi
 
 # terraform completion
-complete -o nospace -C /opt/homebrew/Cellar/tfenv/2.2.3/versions/1.2.2/terraform terraform
+if command -v terraform >/dev/null 2>&1; then
+  complete -o nospace -C "$(command -v terraform)" terraform
+fi
 
 # for local completions
 fpath=( $ZSH_CONF_DIR/zsh/completion/.local "${fpath[@]}")
