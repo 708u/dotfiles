@@ -15,6 +15,9 @@
     eza
     fd
     figlet
+    fira-code
+    hackgen-font
+    hackgen-nf-font
     fzf
     gh
     ghq
