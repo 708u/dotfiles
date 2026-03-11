@@ -74,6 +74,8 @@
   };
 
   home.sessionPath = [
+    "/opt/homebrew/bin"
+    "/opt/homebrew/sbin"
     "/usr/local/go/bin"
     "$GOPATH/bin"
     "$HOME/bin"
