@@ -24,7 +24,7 @@ alias lla='lsd -la'
 alias j='just'
 alias tf='terraform'
 
-alias relogin='exec $SHELL -l'
+alias relogin='exec zsh -l'
 
 alias dtree='tree -d -I "vendor|node_modules" -N'
 cdg() {
