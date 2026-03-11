@@ -47,6 +47,7 @@ alias -g G='| grep'
 alias grep='grep --color=auto'
 
 alias c="claude"
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
 # twig
 twig-switch() {
