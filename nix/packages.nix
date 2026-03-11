@@ -44,6 +44,7 @@
     ripgrep
     saml2aws
     shellcheck
+    tailscale
     terminal-notifier
     tflint
     tig
