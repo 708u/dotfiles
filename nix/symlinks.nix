@@ -38,5 +38,8 @@ in
     ".claude/skills" = {
       source = mkSymlink ".config/claude/skills";
     };
+    ".mutagen.yml" = {
+      source = mkSymlink ".config/mutagen.yml";
+    };
   };
 }
