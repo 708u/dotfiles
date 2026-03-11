@@ -1,5 +1,5 @@
 #!/bin/bash
-TS=/etc/profiles/per-user/708u/bin/tailscale
+TS=/Applications/Tailscale.app/Contents/MacOS/Tailscale
 if $TS status &>/dev/null; then
   echo ":network: TS | sfcolor=white"
 else

@@ -32,6 +32,7 @@
       "appcleaner"
       "asana"
       "bettertouchtool"
+      "claude"
       "cmux"
       "cyberduck"
       "discord"
@@ -51,7 +52,6 @@
       "orbstack"
       "postman"
       "raycast"
-      "swiftbar"
       "tableplus"
       "twig"
       "vagrant"
@@ -67,6 +67,7 @@
       Slack = 803453959;
       Spark = 1176895641;
       Trello = 1278508951;
+      Tailscale = 1475387142;
     };
   };
 }

@@ -1,4 +1,4 @@
-{ pkgs, username, hostname, ... }:
+{ username, hostname, ... }:
 {
   imports = [
     ./homebrew.nix
@@ -29,16 +29,4 @@
     sudo pmset -a networkoversleep 1
   '';
 
-  launchd.daemons.tailscaled = {
-    serviceConfig = {
-      Label = "com.tailscale.tailscaled";
-      ProgramArguments = [
-        "${pkgs.tailscale}/bin/tailscaled"
-      ];
-      RunAtLoad = true;
-      KeepAlive = true;
-      StandardOutPath = "/var/log/tailscaled.log";
-      StandardErrorPath = "/var/log/tailscaled.log";
-    };
-  };
 }
