@@ -20,6 +20,9 @@
     trackpad.TrackpadCornerSecondaryClick = 2;
     trackpad.Clicking = true;
 
+    # サウンド
+    NSGlobalDomain."com.apple.sound.beep.feedback" = 0;
+
     # すべての拡張子を表示
     NSGlobalDomain.AppleShowAllExtensions = true;
 
@@ -69,9 +72,4 @@
         "com.apple.trackpad.trackpadCornerClickBehavior" = 1;
       };
     };
-  };
-
-  system.activationScripts.postActivation.text = ''
-    osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true' || true
-  '';
-}
+  };}
