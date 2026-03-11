@@ -51,6 +51,7 @@
       "orbstack"
       "postman"
       "raycast"
+      "swiftbar"
       "tableplus"
       "twig"
       "vagrant"
