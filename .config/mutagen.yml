@@ -1,0 +1,13 @@
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    ignore:
+      vcs: false
+      paths:
+        - ".DS_Store"
+        - "*.swp"
+        - "*.lock"
+        - ".git/index.lock"
+        - ".git/*.lock"
+        - "node_modules"
+        - "result"
