@@ -6,7 +6,6 @@ sync:
       paths:
         - ".DS_Store"
         - "*.swp"
-        - "*.lock"
         - ".git/index.lock"
         - ".git/*.lock"
         - "node_modules"
