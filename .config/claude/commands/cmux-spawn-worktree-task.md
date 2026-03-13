@@ -373,12 +373,31 @@ twig add <branch-name> --carry --file ".twig-claude-prompt-<worktree-name>.sh" -
 `twig add -q` の出力からworktreeパスを取得し、
 `cmux new-workspace` でそのディレクトリに移動して
 promptスクリプトを実行する新しいworkspaceを作成する。
-作成後、`cmux rename-workspace` でworkspace名を設定する。
+`cmux new-workspace` は `OK <workspace-id>` 形式で
+新しいworkspace IDを返すため、これを取得して
+`cmux rename-workspace --workspace <id>` に渡す。
 
-```bash
-cmux new-workspace --command "cd <worktree-path> && bash .twig-claude-prompt-<worktree-name>.sh"
-cmux rename-workspace "<workspace-name>"
-```
+`--workspace` を省略すると `CMUX_WORKSPACE_ID`
+（呼び出し元のworkspace）がリネームされるため、
+必ず明示的に指定すること。
+
+以下の3ステップを順番に実行する。
+変数への代入は禁止。各コマンドのstdoutに出力される
+IDを読み取り、次のコマンドの引数に直接指定すること。
+
+1. `cmux new-workspace --command "..."` を実行する。
+   `--command` にはworktreeへのcdとpromptスクリプトの
+   実行を指定する。stdoutに `OK <workspace-id>` が
+   出力されるので、workspace-idを控える。
+2. `cmux rename-workspace` を実行する。
+   `--workspace` に手順1で得たworkspace-idを指定し、
+   workspace名を設定する。
+3. `cmux new-split right` を実行する。
+   `--workspace` に手順1で得たworkspace-idを指定する。
+   stdoutに `OK <surface-id>` が出力されるので、
+   続けて `cmux send` を実行する。
+   `--workspace` と `--surface` にそれぞれのIDを指定し、
+   worktreeへのcdと`gra`の実行を送信する。
 
 **workspace名の命名規則**:
 
@@ -391,8 +410,9 @@ cmux rename-workspace "<workspace-name>"
 このコマンドにより:
 
 - cmuxに新しいworkspaceが作成される
-- worktreeディレクトリに移動してpromptスクリプトが実行される
-- Claude Codeが自動的に起動してタスクを開始する
+- 左pane: worktreeでpromptスクリプトが実行され、
+  Claude Codeが自動的に起動する
+- 右pane: 同じworktreeディレクトリで`gra`が実行される
 - workspace名から作業内容を一目で識別できる
 
 ## 例
