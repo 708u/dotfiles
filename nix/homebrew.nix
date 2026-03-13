@@ -40,6 +40,7 @@
       "dropbox"
       "elgato-wave-link"
       "figma"
+      "gather"
       "gcloud-cli"
       "ghostty"
       "google-chrome"
