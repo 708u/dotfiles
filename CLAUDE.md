@@ -71,3 +71,8 @@ nix store 経由の二段階 symlink を作成する。
   (`initExtra`, `initExtraFirst` は deprecated)
 - `homebrew.nix` の `cleanup = "zap"` により
   記載のない cask は自動削除される
+
+## mutagen
+
+- 設定変更後は `mutagen sync reset <session>` で反映
+- terminate → 再作成は不要
