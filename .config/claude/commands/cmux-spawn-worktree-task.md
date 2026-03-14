@@ -398,6 +398,11 @@ IDを読み取り、次のコマンドの引数に直接指定すること。
    続けて `cmux send` を実行する。
    `--workspace` と `--surface` にそれぞれのIDを指定し、
    worktreeへのcdと`gra`の実行を送信する。
+   テキスト末尾に `\n` を付与してEnterを送信すること。
+   `cmux send` はテキストを入力するだけで自動的に
+   Enterを押さないため、`\n` がないとコマンドが
+   実行されずに入力止まりになる。
+   例: `cmux send --workspace <id> --surface <id> "cd /path && gra\n"`
 
 **workspace名の命名規則**:
 
