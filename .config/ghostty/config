@@ -1,5 +1,6 @@
 command = /bin/zsh
 font-family = HackGen35Nerd
+font-codepoint-map = U+3000-9FFF=HackGen35Nerd
 
 cursor-style = block
 cursor-style-blink = true
