@@ -71,5 +71,17 @@
         AppleMiniaturizeOnDoubleClick = false;
         "com.apple.trackpad.trackpadCornerClickBehavior" = 1;
       };
+      "com.apple.symbolichotkeys" = {
+        AppleSymbolicHotKeys = {
+          # Dock 表示/非表示 (Cmd+Option+D) を無効化
+          "52" = {
+            enabled = false;
+            value = {
+              parameters = [ 100 2 8650752 ];
+              type = "standard";
+            };
+          };
+        };
+      };
     };
   };}
