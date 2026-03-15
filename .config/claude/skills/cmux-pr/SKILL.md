@@ -36,15 +36,19 @@ cmux tree
 
 ### 3. ブラウザで PR を開く
 
-surface が 2 つ以上ある場合は、既存の browser
-surface に tab を追加する:
+surface の総数（種類を問わず）で分岐する。
+
+**surface が 2 つ以上の場合:**
+既存の surface に browser tab を追加する。
+browser surface があればそれを使い、なければ
+いずれかの surface を指定する:
 
 ```bash
 cmux browser --surface <surface-ref> \
   tab new "https://github.com/{owner}/{repo}/pull/{number}"
 ```
 
-surface が 1 つのみの場合は、
+**surface が 1 つのみの場合:**
 右側に新しい pane を作成する:
 
 ```bash

@@ -72,6 +72,18 @@ nix store 経由の二段階 symlink を作成する。
 - `homebrew.nix` の `cleanup = "zap"` により
   記載のない cask は自動削除される
 
+## Claude Code プラグイン (手動セットアップ)
+
+`make apply` では反映されない手動手順がある。
+
+```bash
+# gopls 共有 daemon モード
+# 複数セッションで gopls を共有しメモリを節約する
+claude plugin marketplace add \
+  .config/claude/plugins/gopls-remote
+claude plugin install gopls-remote@gopls-remote
+```
+
 ## mutagen
 
 - 設定変更後は `mutagen sync reset <session>` で反映

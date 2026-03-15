@@ -1,0 +1,23 @@
+{
+  "name": "gopls-remote",
+  "owner": {
+    "name": "708u"
+  },
+  "plugins": [
+    {
+      "name": "gopls-remote",
+      "description": "gopls with shared daemon mode (-remote=auto)",
+      "version": "1.0.0",
+      "source": "./plugins/gopls-remote",
+      "lspServers": {
+        "gopls": {
+          "command": "gopls",
+          "args": ["-remote=auto"],
+          "extensionToLanguage": {
+            ".go": "go"
+          }
+        }
+      }
+    }
+  ]
+}

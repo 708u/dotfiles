@@ -241,7 +241,8 @@ claude \
 完了したら:
 1. /simplify を呼び出してコードを整理
 2. /commit-push-update-pr を呼び出してPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
+3. /cmux-pr を呼び出してPRをブラウザペインに表示
+4. .twig-claude-prompt-<worktree-name>.sh を
    .completed-twig-claude-prompt.sh にリネーム"
 ```
 
@@ -299,7 +300,8 @@ GET /users と POST /users を実装する。
 完了したら:
 1. /simplify を呼び出してコードを整理
 2. /commit-push-update-pr でPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
+3. /cmux-pr でPRをブラウザペインに表示
+4. .twig-claude-prompt-<worktree-name>.sh を
    .completed-twig-claude-prompt.sh にリネーム"
 ```
 
@@ -309,7 +311,8 @@ claudeへの指示の最後に、以下の完了手順を必ず含める:
 
 1. 作業完了後、`/simplify` を呼び出してコードを整理する
 2. 必要に応じて `/commit-push-update-pr` を呼び出す
-3. `.twig-claude-prompt-<worktree-name>.sh` を
+3. `/cmux-pr` を呼び出してPRをブラウザペインに表示する
+4. `.twig-claude-prompt-<worktree-name>.sh` を
    `.completed-twig-claude-prompt.sh` にリネームする
 
 ```bash
@@ -319,7 +322,8 @@ claude \
 "機能を実装してください。完了したら:
 1. /simplify を呼び出してコードを整理
 2. /commit-push-update-pr を呼び出してPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
+3. /cmux-pr を呼び出してPRをブラウザペインに表示
+4. .twig-claude-prompt-<worktree-name>.sh を
    .completed-twig-claude-prompt.sh にリネーム"
 ```
 
