@@ -7,6 +7,10 @@
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest"]
+    },
+    "gracilius": {
+      "command": "gra",
+      "args": ["mcp"]
     }
   }
 }
