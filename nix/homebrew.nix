@@ -34,6 +34,7 @@
       "bettertouchtool"
       "claude"
       "cmux"
+      "chrome-remote-desktop-host"
       "cyberduck"
       "discord"
       "docker-desktop"
