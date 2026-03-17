@@ -55,6 +55,10 @@
 
     # nix-darwin に専用オプションがない設定
     CustomUserPreferences = {
+      # Spotlight 無効化 (Raycast で代替)
+      "com.apple.Spotlight" = {
+        "SuppressSearchFeature" = true;
+      };
       "com.apple.finder" = {
         FinderSounds = false;
       };
