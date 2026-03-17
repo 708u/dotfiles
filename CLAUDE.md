@@ -82,6 +82,9 @@ nix store 経由の二段階 symlink を作成する。
 claude plugin marketplace add \
   .config/claude/plugins/gopls-remote
 claude plugin install gopls-remote@gopls-remote
+
+# Spotlight インデックス無効化 (Raycast で代替)
+sudo mdutil -a -i off
 ```
 
 ## mutagen
