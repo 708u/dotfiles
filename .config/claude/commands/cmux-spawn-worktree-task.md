@@ -385,19 +385,33 @@ promptスクリプトを実行する新しいworkspaceを作成する。
 （呼び出し元のworkspace）がリネームされるため、
 必ず明示的に指定すること。
 
-以下の3ステップを順番に実行する。
+`cmux new-workspace` には `--window` フラグがなく、
+フォーカス中のwindowにworkspaceが作成される。
+複数windowが存在する場合、呼び出し元と異なる
+windowに作成されることがある。これを防ぐため、
+事前に `cmux identify` で呼び出し元のwindow IDを
+取得し、作成後に `move-workspace-to-window` で
+正しいwindowに移動させる。
+
+以下のステップを順番に実行する。
 変数への代入は禁止。各コマンドのstdoutに出力される
 IDを読み取り、次のコマンドの引数に直接指定すること。
 
-1. `cmux new-workspace --command "..."` を実行する。
+1. `cmux identify` を実行する。
+   JSON出力の `.caller.window_ref` が
+   呼び出し元のwindow IDである。これを控える。
+2. `cmux new-workspace --command "..."` を実行する。
    `--command` にはworktreeへのcdとpromptスクリプトの
    実行を指定する。stdoutに `OK <workspace-id>` が
    出力されるので、workspace-idを控える。
-2. `cmux rename-workspace` を実行する。
-   `--workspace` に手順1で得たworkspace-idを指定し、
+3. `cmux move-workspace-to-window` を実行する。
+   `--workspace` に手順2で得たworkspace-idを、
+   `--window` に手順1で得たwindow IDを指定する。
+4. `cmux rename-workspace` を実行する。
+   `--workspace` に手順2で得たworkspace-idを指定し、
    workspace名を設定する。
-3. `cmux new-split right` を実行する。
-   `--workspace` に手順1で得たworkspace-idを指定する。
+5. `cmux new-split right` を実行する。
+   `--workspace` に手順2で得たworkspace-idを指定する。
    stdoutに `OK <surface-id>` が出力されるので、
    続けて `cmux send` を実行する。
    `--workspace` と `--surface` にそれぞれのIDを指定し、
