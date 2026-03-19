@@ -30,8 +30,13 @@ PR が存在しない場合はユーザーに報告して終了する。
 
 ### 2. workspace の構成を確認
 
+`cmux tree` はフォーカス中のwindowのツリーを返す。
+複数windowが存在する場合、呼び出し元と異なるwindowの
+ツリーが返される可能性がある。`--workspace` を指定して
+呼び出し元のworkspaceに限定する:
+
 ```bash
-cmux tree
+cmux tree --workspace "$CMUX_WORKSPACE_ID"
 ```
 
 ### 3. ブラウザで PR を開く
