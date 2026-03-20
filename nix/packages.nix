@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, inputs, system, ... }:
 {
   home.packages = with pkgs; [
     ansible
@@ -22,6 +22,7 @@
     fzf
     gh
     ghq
+    inputs.gws.packages.${system}.default
     git
     gnugrep
     gogcli
