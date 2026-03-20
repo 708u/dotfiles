@@ -17,6 +17,8 @@
     "playwright"
   ],
   "enabledPlugins": {
+    "asana@claude-plugins-official": true,
+    "asana@progate-plugins": true,
     "claude-code-setup@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
@@ -30,7 +32,8 @@
     "plugin-dev@claude-plugins-official": true,
     "security-guidance@claude-code-plugins": true,
     "skill-creator@claude-plugins-official": true,
-    "slack@claude-plugins-official": true,
+    "slack-cli@708u-slack-cli": true,
+    "twig-worktree-hooks@twig-plugins": true,
     "twig@twig-plugins": true,
     "typescript-lsp@claude-plugins-official": true
   },
@@ -39,10 +42,22 @@
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
   },
   "extraKnownMarketplaces": {
+    "708u-slack-cli": {
+      "source": {
+        "repo": "708u/slack-cli",
+        "source": "github"
+      }
+    },
     "gopls-remote": {
       "source": {
         "path": "/Users/708u/ghq/github.com/708u/dotfiles/.config/claude/plugins/gopls-remote",
         "source": "directory"
+      }
+    },
+    "twig-plugins": {
+      "source": {
+        "repo": "708u/twig",
+        "source": "github"
       }
     }
   },
