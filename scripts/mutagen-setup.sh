@@ -7,6 +7,7 @@ sessions=(
   "ghq|$HOME/ghq|home:~/ghq"
   "claude-dir|$HOME/.claude|home:~/.claude"
   "claude-json|$HOME/.claude.json|home:~/.claude.json"
+  "working-repo|$HOME/working_repo|home:~/working_repo"
 )
 
 for entry in "${sessions[@]}"; do
