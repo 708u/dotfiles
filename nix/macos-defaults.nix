@@ -85,6 +85,22 @@
               type = "standard";
             };
           };
+          # Spotlight 検索表示 (Cmd+Space) を無効化
+          "64" = {
+            enabled = false;
+            value = {
+              parameters = [ 32 49 1048576 ];
+              type = "standard";
+            };
+          };
+          # Finder 検索ウィンドウ (Cmd+Option+Space) を無効化
+          "65" = {
+            enabled = false;
+            value = {
+              parameters = [ 32 49 1572864 ];
+              type = "standard";
+            };
+          };
         };
       };
     };
