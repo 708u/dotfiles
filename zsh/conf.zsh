@@ -16,9 +16,6 @@ setopt no_beep
 # フローコントロールを無効にする
 setopt no_flow_control
 
-# Ctrl+Dでzshを終了しない
-setopt ignore_eof
-
 # '#' 以降をコメントとして扱う
 setopt interactive_comments
 
