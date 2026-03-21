@@ -28,6 +28,9 @@ abbr -S -q tailscale='/Applications/Tailscale.app/Contents/MacOS/Tailscale'
 # shell
 abbr -S -q relogin='exec zsh -l'
 
+# security
+abbr -S -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
+
 # claude
 abbr -S -q c='claude'
 abbr -S -q cplan='claude --permission-mode plan --effort max'

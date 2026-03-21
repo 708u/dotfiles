@@ -16,7 +16,7 @@ alias -g G='| grep'
 alias grep='grep --color=auto'
 
 # twig
-twig-switch() {
+cdw() {
   local _target=$(twig list -q | fzf)
   [ -n "$_target" ] && cd "$_target"
 }
