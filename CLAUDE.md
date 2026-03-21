@@ -61,6 +61,18 @@ nix store 経由の二段階 symlink を作成する。
 `zsh/` 配下の設定ファイルを source する。
 `zsh/.local.zsh` はローカル専用 (gitignore)。 読み取り禁止
 
+### alias と abbr の使い分け
+
+- **alias** (`zsh/alias.zsh`):
+  既存コマンドの上書き (`ls='lsd'`)、
+  グローバルエイリアス (`-g`)、シェル関数
+- **abbr** (`zsh/abbr.zsh`):
+  コマンドのショートカット。`abbr -S -q` で定義。
+  入力時に展開され履歴に実コマンドが残る
+
+新規追加は原則 abbr を使う。
+alias は上書き・グローバル・関数定義のみ。
+
 ## Nix の注意点
 
 - Determinate Nix 使用のため `nix.enable = false`
