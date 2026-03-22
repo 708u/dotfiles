@@ -6,8 +6,7 @@ description: |
   "revise for human touch", "人間らしく", "人間っぽく", "自然な文章に",
   or when refining AI-generated content to feel less robotic.
   Use when transforming mechanical AI output into warm, authentic human expression.
-  Also use when the user asks to write in a specific persona's style, e.g.,
-  "naoyaっぽく", "udaさん風に", "naoya-uda style", "naoya udaの文体で".
+  Also use when the user asks to write in a specific persona's style.
 ---
 
 # Human-Like Writing
@@ -147,7 +146,7 @@ Markdownテーブルは機械的な印象を与える。
 
 ### 使い方
 
-ユーザーが「naoyaっぽく書いて」「udaさん風に」等と指示した場合:
+ユーザーがペルソナ指定で文体を指示した場合:
 
 1. 対応するペルソナファイルを読み込む
 1. ペルソナの口調切り替えルールに従う
@@ -168,5 +167,4 @@ Markdownテーブルは機械的な印象を与える。
 
 - [references/patterns.md](references/patterns.md) -
 シチュエーション別の詳細パターンと変換例
-- [references/persona-naoya-uda.md](references/persona-naoya-uda.md) -
-Naoya Udaの文体ペルソナ(Slack約430件から抽出)
+- references/ 配下にペルソナファイルを配置して使用する
