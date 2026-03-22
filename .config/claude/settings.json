@@ -18,7 +18,6 @@
   ],
   "enabledPlugins": {
     "asana@claude-plugins-official": true,
-    "asana@progate-plugins": true,
     "claude-code-setup@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
