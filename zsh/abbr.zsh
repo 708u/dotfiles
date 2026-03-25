@@ -1,36 +1,47 @@
 # docker
-abbr -S -q d='docker'
-abbr -S -q -f dc='docker-compose'
-abbr -S -q dp='docker ps'
-abbr -S -q dcs='docker-compose stop'
-abbr -S -q docker-delete-all='docker-compose down --rmi all --volumes'
-abbr -S -q docker-stats='docker stats --format "table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"'
+abbr -q d='docker'
+abbr -q -f dc='docker-compose'
+abbr -q dp='docker ps'
+abbr -q dcs='docker-compose stop'
+abbr -q docker-delete-all='docker-compose down --rmi all --volumes'
+abbr -q docker-stats='docker stats --format "table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"'
 
 # git
-abbr -S -q g='git'
-abbr -S -q gs='git status'
-abbr -S -q gb='git branch -v'
-abbr -S -q push='git push'
-abbr -S -q pull='git pull'
-abbr -S -q git-revert='git reset --hard && git clean -df'
-abbr -S -q git-softreset='git reset --soft HEAD~1'
-abbr -S -q hp='git push -u origin HEAD'
+abbr -q g='git'
+abbr -q gs='git status'
+abbr -q gb='git branch -v'
+abbr -q push='git push'
+abbr -q pull='git pull'
+abbr -q git-revert='git reset --hard && git clean -df'
+abbr -q git-softreset='git reset --soft HEAD~1'
+abbr -q hp='git push -u origin HEAD'
 
 # tools
-abbr -S -q j='just'
-abbr -S -q tf='terraform'
-abbr -S -q la='lsd -a'
-abbr -S -q ll='lsd -l'
-abbr -S -q lla='lsd -la'
-abbr -S -q dtree='tree -d -I "vendor|node_modules" -N'
-abbr -S -q tailscale='/Applications/Tailscale.app/Contents/MacOS/Tailscale'
+abbr -q j='just'
+abbr -q tf='terraform'
+abbr -q la='lsd -a'
+abbr -q ll='lsd -l'
+abbr -q lla='lsd -la'
+abbr -q dtree='tree -d -I "vendor|node_modules" -N'
+abbr -q tailscale='/Applications/Tailscale.app/Contents/MacOS/Tailscale'
 
 # shell
-abbr -S -q relogin='exec zsh -l'
+abbr -q relogin='exec zsh -l'
 
 # security
-abbr -S -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
+abbr -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
 
 # claude
-abbr -S -q c='claude'
-abbr -S -q cplan='claude --permission-mode plan --effort max'
+abbr -q c='claude'
+abbr -q -f cc='claude -c'
+abbr -q cplan='claude --permission-mode plan --effort max'
+
+# zsh-syntax-highlighting integration
+# abbr を valid command と同じ色でハイライトする
+(( ${#ABBR_REGULAR_USER_ABBREVIATIONS} )) && {
+  ZSH_HIGHLIGHT_HIGHLIGHTERS+=(regexp)
+  ZSH_HIGHLIGHT_REGEXP=('^[[:blank:][:space:]]*('${(j:|:)${(Qk)ABBR_REGULAR_USER_ABBREVIATIONS}}')$' fg=green)
+}
+(( ${#ABBR_GLOBAL_USER_ABBREVIATIONS} )) && {
+  ZSH_HIGHLIGHT_REGEXP+=('[[:<:]]('${(j:|:)${(Qk)ABBR_GLOBAL_USER_ABBREVIATIONS}}')$' fg=green)
+}
