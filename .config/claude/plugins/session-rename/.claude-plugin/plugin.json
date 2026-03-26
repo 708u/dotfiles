@@ -1,0 +1,5 @@
+{
+  "name": "session-rename",
+  "version": "0.1.0",
+  "description": "セッション終了時に自動で名前を付与する"
+}

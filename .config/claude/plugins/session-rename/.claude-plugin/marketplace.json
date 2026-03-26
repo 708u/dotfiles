@@ -1,0 +1,15 @@
+{
+  "name": "session-rename",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "session-rename",
+      "source": "./",
+      "description": "セッション終了時に自動で名前を付与する",
+      "version": "0.1.0"
+    }
+  ]
+}
