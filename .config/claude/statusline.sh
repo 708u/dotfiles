@@ -23,9 +23,11 @@ else
   fi
 fi
 
-# ANSI colors - Minimal palette
+# ANSI colors
 BOLD='\033[1m'
 DIM='\033[2m'
+CYAN='\033[36m'
+GREEN='\033[32m'
 ORANGE='\033[38;5;215m'
 YELLOW='\033[33m'
 RED='\033[31m'
@@ -48,9 +50,6 @@ total_tokens=$(echo "$input" | jq -r '
 ')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | xargs printf "%.0f")
 
-# 補正値: 82%でコンテキストが切れるため、82%を100%に補正
-corrected_used=$(( used * 100 / 82 ))
-
 # Format token counts (K/M)
 format_tokens() {
   local count=$1
@@ -66,19 +65,53 @@ format_tokens() {
 total_fmt=$(format_tokens "$total_tokens")
 ctx_fmt=$(format_tokens "$context_size")
 
-# Usage color - always visible, warn with color
-if (( corrected_used < 50 )); then
-  USAGE_COLOR=""
-elif (( corrected_used < 80 )); then
-  USAGE_COLOR="$YELLOW"
+# Progress bar color (bright variants for filled blocks)
+if (( used < 50 )); then
+  BAR_COLOR='\033[92m'
+elif (( used < 80 )); then
+  BAR_COLOR='\033[93m'
 else
-  USAGE_COLOR="$RED"
+  BAR_COLOR='\033[91m'
 fi
 
-# Build output
-parts=("$display_repo")
-parts+=("${DIM}${model}${RESET}")
-parts+=("${total_fmt} / ${ctx_fmt} (${USAGE_COLOR}${corrected_used}%${RESET}) ${DIM}[${used}%]${RESET}")
+# Build progress bar
+BRIGHT_GREEN='\033[92m'
+BAR_WIDTH=10
+FILLED=$((used * BAR_WIDTH / 100))
+EMPTY=$((BAR_WIDTH - FILLED))
+BAR=""
+[ "$FILLED" -gt 0 ] && printf -v FILL "%${FILLED}s" && BAR="${BAR_COLOR}${FILL// /█}"
+[ "$EMPTY" -gt 0 ] && printf -v PAD "%${EMPTY}s" && BAR="${BAR}${DIM}${BAR_COLOR}${PAD// /░}"
+BAR="${BAR}${RESET}"
 
-# Join with " | "
-(IFS="|"; printf '%b\n' "${parts[*]}" | sed 's/|/ | /g')
+# Duration
+DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
+MINS=$((DURATION_MS / 60000))
+SECS=$(((DURATION_MS % 60000) / 1000))
+
+# Rate limits
+five_h=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+seven_d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+
+# Worktree
+worktree_name=$(echo "$input" | jq -r '.worktree.name // empty')
+
+# Line 1: repo, context bar, worktree
+line1=("$display_repo")
+line1+=("${BAR} ${used}% (${total_fmt} / ${ctx_fmt})")
+if [[ -n "$worktree_name" ]]; then
+  line1+=("${ORANGE}${worktree_name}${RESET}")
+fi
+
+# Line 2: model, cost, duration, rate limits
+line2=("${DIM}${model}${RESET}")
+line2+=("${DIM}dur${RESET} ${MINS}m ${SECS}s")
+if [[ -n "$five_h" ]]; then
+  five_h_int=$(printf "%.0f" "$five_h")
+  seven_d_int=$(printf "%.0f" "$seven_d")
+  line2+=("${DIM}limit 5h${RESET} ${five_h_int}% ${DIM}7d${RESET} ${seven_d_int}%")
+fi
+
+# Output
+(IFS="|"; printf '%b\n' "${line1[*]}" | sed 's/|/ | /g')
+(IFS="|"; printf '%b\n' "${line2[*]}" | sed 's/|/ | /g')
