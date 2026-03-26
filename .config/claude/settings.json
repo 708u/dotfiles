@@ -17,11 +17,9 @@
     "playwright"
   ],
   "enabledPlugins": {
-    "asana@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
-    "frontend-design@claude-code-plugins": true,
     "frontend-design@claude-plugins-official": true,
     "github@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": false,
@@ -157,6 +155,7 @@
       "Bash(pushd:*)",
       "Bash(rg:*)",
       "Bash(sed:*)",
+      "Bash(slack-cli:*)",
       "Bash(tree:*)",
       "Bash(twig add:*)",
       "Bash(twig list:*)",
