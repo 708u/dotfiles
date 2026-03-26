@@ -52,7 +52,6 @@
       "postman"
       "raycast"
       "tableplus"
-      "twig"
       "visual-studio-code"
       "vnc-viewer"
       "zoom"
