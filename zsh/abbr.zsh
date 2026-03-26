@@ -32,9 +32,9 @@ abbr -q relogin='exec zsh -l'
 abbr -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
 
 # claude
-abbr -q c='claude'
-abbr -q -f cc='claude -c'
-abbr -q cplan='claude --permission-mode plan --effort max'
+abbr -q c='claude --effort max'
+abbr -q -f cc='claude -c --effort max'
+abbr -q cpl='claude --permission-mode plan --effort max'
 
 # zsh-syntax-highlighting integration
 # abbr を valid command と同じ色でハイライトする
