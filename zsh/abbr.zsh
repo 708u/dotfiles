@@ -34,6 +34,7 @@ abbr -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
 # claude
 abbr -q c='claude --effort max'
 abbr -q -f cc='claude -c --effort max'
+abbr -q cr='claude --resume --effort max'
 abbr -q cpl='claude --permission-mode plan --effort max'
 
 # zsh-syntax-highlighting integration
