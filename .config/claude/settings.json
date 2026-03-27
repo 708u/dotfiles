@@ -1,135 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "allowedTools": [
-    "Bash",
-    "Edit",
-    "Glob",
-    "Grep",
-    "Read",
-    "WebFetch",
-    "WebSearch",
-    "Write"
-  ],
-  "autoUpdatesChannel": "latest",
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "deepwiki",
-    "playwright"
-  ],
-  "enabledPlugins": {
-    "claude-code-setup@claude-plugins-official": true,
-    "explanatory-output-style@claude-plugins-official": true,
-    "figma@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": false,
-    "gopls-remote@gopls-remote": true,
-    "hookify@claude-code-plugins": false,
-    "plugin-dev@claude-code-plugins": true,
-    "plugin-dev@claude-plugins-official": true,
-    "security-guidance@claude-code-plugins": true,
-    "skill-creator@claude-plugins-official": true,
-    "slack-cli@708u-slack-cli": true,
-    "twig-worktree-hooks@twig-plugins": true,
-    "twig@twig-plugins": true,
-    "typescript-lsp@claude-plugins-official": true
-  },
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "97",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
   },
-  "extraKnownMarketplaces": {
-    "708u-slack-cli": {
-      "source": {
-        "repo": "708u/slack-cli",
-        "source": "github"
-      }
-    },
-    "gopls-remote": {
-      "source": {
-        "path": "/Users/708u/ghq/github.com/708u/dotfiles/.config/claude/plugins/gopls-remote",
-        "source": "directory"
-      }
-    },
-    "twig-plugins": {
-      "source": {
-        "repo": "708u/twig",
-        "source": "github"
-      }
-    }
-  },
-  "feedbackSurveyState": {
-    "lastShownTime": 1754033029966
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "afplay /System/Library/Sounds/Glass.aiff",
-            "type": "command"
-          }
-        ],
-        "matcher": "permission_prompt|idle_prompt|elicitation_dialog"
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "jq -r '.tool_input.file_path | select(endswith(\".js\") or endswith(\".ts\") or endswith(\".jsx\") or endswith(\".tsx\"))' | xargs -r npx prettier --write",
-            "type": "command"
-          },
-          {
-            "command": "jq -r '.tool_input.file_path | select(endswith(\".go\"))' | xargs -r golangci-lint fmt",
-            "type": "command"
-          },
-          {
-            "command": "jq -r '.tool_input.file_path | select(endswith(\".md\"))' | xargs -r markdownlint-cli2 --fix",
-            "type": "command"
-          },
-          {
-            "command": "jq -r '.tool_input.file_path | select(endswith(\".tf\") or endswith(\".tftest.hcl\"))' | xargs -r terraform fmt",
-            "type": "command"
-          }
-        ],
-        "matcher": "Write|Edit|MultiEdit"
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreCompact\",\"additionalContext\":\"IMPORTANT: Before compaction, you MUST use the Skill tool to invoke /export-session to save the current session context. Do this immediately.\"}}'",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "afplay /System/Library/Sounds/Submarine.aiff",
-            "type": "command"
-          }
-        ],
-        "matcher": "Write|Edit|MultiEdit"
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "cctidy --unsafe",
-            "type": "command"
-          }
-        ]
-      }
-    ]
-  },
   "includeCoAuthoredBy": false,
-  "language": "常に丁寧な言葉づかいにする",
   "permissions": {
     "allow": [
       "Bash(code:*)",
@@ -170,8 +45,139 @@
       "NotebookEdit"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "deepwiki",
+    "playwright"
+  ],
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt|elicitation_dialog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".js\") or endswith(\".ts\") or endswith(\".jsx\") or endswith(\".tsx\"))' | xargs -r npx prettier --write"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".go\"))' | xargs -r golangci-lint fmt"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".md\"))' | xargs -r markdownlint-cli2 --fix"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".tf\") or endswith(\".tftest.hcl\"))' | xargs -r terraform fmt"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreCompact\",\"additionalContext\":\"IMPORTANT: Before compaction, you MUST use the Skill tool to invoke /export-session to save the current session context. Do this immediately.\"}}'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Submarine.aiff"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cctidy --unsafe"
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
-    "command": "~/.claude/statusline.sh",
-    "type": "command"
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "explanatory-output-style@claude-plugins-official": true,
+    "figma@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": false,
+    "gopls-remote@gopls-remote": true,
+    "hookify@claude-code-plugins": false,
+    "plugin-dev@claude-plugins-official": true,
+    "security-guidance@claude-code-plugins": true,
+    "skill-creator@claude-plugins-official": true,
+    "slack-cli@708u-slack-cli": true,
+    "twig-worktree-hooks@twig-plugins": true,
+    "twig@twig-plugins": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "session-rename@session-rename": false,
+    "claude-md-management@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "708u-slack-cli": {
+      "source": {
+        "source": "github",
+        "repo": "708u/slack-cli"
+      }
+    },
+    "gopls-remote": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/708u/ghq/github.com/708u/dotfiles/.config/claude/plugins/gopls-remote"
+      }
+    },
+    "twig-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "708u/twig"
+      }
+    },
+    "session-rename": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/708u/ghq/github.com/708u/dotfiles/.config/claude/plugins/session-rename"
+      }
+    }
+  },
+  "language": "常に丁寧な言葉づかいにする",
+  "autoUpdatesChannel": "latest",
+  "allowedTools": [
+    "Bash",
+    "Edit",
+    "Glob",
+    "Grep",
+    "Read",
+    "WebFetch",
+    "WebSearch",
+    "Write"
+  ],
+  "feedbackSurveyState": {
+    "lastShownTime": 1754033029966
   }
 }
