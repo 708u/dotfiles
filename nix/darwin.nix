@@ -24,9 +24,17 @@
   security.pam.services.sudo_local.touchIdAuth = true;
 
   system.activationScripts.postActivation.text = ''
-    sudo pmset -a sleep 0
-    sudo pmset -a standby 0
-    sudo pmset -a networkoversleep 1
+    # バッテリー: macOS 標準 (スリープ有効)
+    sudo pmset -b sleep 1
+    sudo pmset -b standby 1
+    sudo pmset -b powernap 1
+    sudo pmset -b networkoversleep 0
+
+    # AC: サーバー運用 (スリープ無効, ネットワーク維持)
+    sudo pmset -c sleep 0
+    sudo pmset -c standby 0
+    sudo pmset -c powernap 1
+    sudo pmset -c networkoversleep 1
   '';
 
 }
