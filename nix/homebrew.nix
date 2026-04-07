@@ -10,15 +10,12 @@
 
     taps = [
       "708u/tap"
-      "qmk/qmk"
       "k1low/tap"
       "stripe/stripe-cli"
     ];
 
     brews = [
       "mas"
-      "qmk/qmk/qmk"
-      "qmmp"
       "serverless"
       "stripe/stripe-cli/stripe"
       "k1low/tap/tbls"
