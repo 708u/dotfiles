@@ -41,8 +41,5 @@ in
     ".mutagen.yml" = {
       source = mkSymlink ".config/mutagen.yml";
     };
-    ".ssh/config" = {
-      source = mkSymlink ".config/ssh/config";
-    };
-  };
+};
 }
