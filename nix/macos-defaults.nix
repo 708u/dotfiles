@@ -73,6 +73,11 @@
       "com.apple.AppleMultitouchTrackpad" = {
         TrackpadRightClick = false;
       };
+      # fn/Globe キー単押しで入力ソース切り替えを無効化
+      # (左 Command を fn として使うため)
+      "com.apple.HIToolbox" = {
+        AppleFnUsageType = 0;
+      };
       NSGlobalDomain = {
         AppleAccentColor = 1;
         AppleHighlightColor =
