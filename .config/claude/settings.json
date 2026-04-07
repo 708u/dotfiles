@@ -166,6 +166,7 @@
     }
   },
   "language": "常に丁寧な言葉づかいにする",
+  "effortLevel": "max",
   "autoUpdatesChannel": "latest",
   "allowedTools": [
     "Bash",
