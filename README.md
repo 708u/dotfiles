@@ -15,7 +15,10 @@ git clone https://github.com/708u/dotfiles.git \
   ~/ghq/github.com/708u/dotfiles
 cd ~/ghq/github.com/708u/dotfiles
 
-# 3. 初回セットアップ
+# 3. homebrewをインストール
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 4. 初回セットアップ
 make bootstrap
 ```
 
