@@ -47,6 +47,19 @@ twig-c() {
   fi
 }
 
+ssh() {
+  if (( ${@[(I)home]} )); then
+    printf '\033]11;#0d1b2a\033\\'
+    {
+      command ssh "$@"
+    } always {
+      printf '\033]111\033\\'
+    }
+  else
+    command ssh "$@"
+  fi
+}
+
 cdg() {
   local _cdg_selected
   _cdg_selected=$(ghq list | sort | fzf --preview "bat --style=numbers --color=always --line-range :500 $(ghq root)/{}/README.*") && cd "$(ghq root)/$_cdg_selected"
