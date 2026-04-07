@@ -16,6 +16,11 @@
     NSGlobalDomain.InitialKeyRepeat = 15;
     NSGlobalDomain.KeyRepeat = 1;
     NSGlobalDomain."com.apple.keyboard.fnState" = true;
+    NSGlobalDomain.NSAutomaticCapitalizationEnabled = false;
+    NSGlobalDomain.NSAutomaticPeriodSubstitutionEnabled = false;
+    NSGlobalDomain.NSAutomaticSpellingCorrectionEnabled = false;
+    NSGlobalDomain.NSAutomaticDashSubstitutionEnabled = false;
+    NSGlobalDomain.NSAutomaticQuoteSubstitutionEnabled = false;
 
     # トラックパッド
     NSGlobalDomain."com.apple.trackpad.enableSecondaryClick" =
@@ -38,6 +43,9 @@
     dock.largesize = 128;
     dock.orientation = "right";
     dock.wvous-br-corner = 14;
+    dock.show-recents = false;
+    dock.launchanim = false;
+    dock.mineffect = "scale";
 
     # Finder
     finder.AppleShowAllFiles = true;
@@ -45,9 +53,12 @@
     finder.ShowPathbar = true;
     finder.AppleShowAllExtensions = true;
     finder.FXPreferredViewStyle = "Nlsv";
+    finder.FXDefaultSearchScope = "SCcf";
+    finder.FXEnableExtensionChangeWarning = false;
 
     # スクリーンショット
     screencapture.location = "~/Documents/screenshots";
+    screencapture.disable-shadow = true;
 
     # メニューバー時計
     menuExtraClock.Show24Hour = true;
@@ -84,6 +95,7 @@
           "1.000000 0.874510 0.701961 Orange";
         AppleMiniaturizeOnDoubleClick = false;
         "com.apple.trackpad.trackpadCornerClickBehavior" = 1;
+        WebAutomaticSpellingCorrectionEnabled = false;
       };
       "com.apple.symbolichotkeys" = {
         AppleSymbolicHotKeys = {
