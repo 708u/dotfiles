@@ -11,11 +11,9 @@
     "Write"
   ],
   "autoUpdatesChannel": "latest",
+  "effortLevel": "high",
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "deepwiki",
-    "playwright"
-  ],
+  "enabledMcpjsonServers": ["deepwiki", "playwright"],
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
@@ -35,8 +33,7 @@
     "typescript-lsp@claude-plugins-official": true
   },
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "97",
-    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "97"
   },
   "extraKnownMarketplaces": {
     "708u-slack-cli": {
@@ -172,11 +169,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch"
     ],
-    "deny": [
-      "NotebookEdit"
-    ]
+    "deny": ["NotebookEdit"]
   },
-  "effortLevel": "max",
   "statusLine": {
     "command": "~/.claude/statusline.sh",
     "type": "command"
