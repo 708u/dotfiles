@@ -47,9 +47,11 @@ twig-c() {
   fi
 }
 
+_SSH_HOME_BG='#0d1b2a'
+
 ssh() {
   if (( ${@[(I)home]} )); then
-    printf '\033]11;#0d1b2a\033\\'
+    printf '\033]11;%s\033\\' "$_SSH_HOME_BG"
     {
       command ssh "$@"
     } always {
@@ -59,6 +61,16 @@ ssh() {
     command ssh "$@"
   fi
 }
+
+# SSH接続先で背景色を維持
+# precmd: プロンプト表示時に再適用
+# TRAPALRM: プロンプト待機中1秒ごとに再適用
+if [[ -n "$SSH_CONNECTION" ]]; then
+  __reapply_ssh_bg() { printf '\033]11;%s\033\\' "$_SSH_HOME_BG" }
+  precmd_functions+=(__reapply_ssh_bg)
+  TMOUT=1
+  TRAPALRM() { __reapply_ssh_bg }
+fi
 
 cdg() {
   local _cdg_selected
