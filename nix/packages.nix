@@ -45,6 +45,7 @@
     ripgrep
     saml2aws
     shellcheck
+    stripe-cli
     terminal-notifier
     tflint
     tig

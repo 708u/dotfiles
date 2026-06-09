@@ -6,18 +6,20 @@
       autoUpdate = true;
       upgrade = true;
       cleanup = "zap";
+      # Homebrew 5.x は `brew bundle --cleanup` に確認フラグを要求するため付与する
+      extraFlags = [ "--force-cleanup" ];
     };
 
     taps = [
       "708u/tap"
       "k1low/tap"
-      "stripe/stripe-cli"
     ];
 
     brews = [
       "mas"
       "serverless"
-      "stripe/stripe-cli/stripe"
+      "aws-sam-cli"
+      "ghz"
       "k1low/tap/tbls"
       "k1low/tap/tbls-ask"
     ];
@@ -48,6 +50,7 @@
       "orbstack"
       "postman"
       "raycast"
+      "session-manager-plugin"
       "tableplus"
       "visual-studio-code"
       "vnc-viewer"
