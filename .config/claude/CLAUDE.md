@@ -310,3 +310,18 @@ pythonのワンライナーは使わない。
 ### sleep
 
 sleepの時間をバックオフしないこと。常に短い時間を適用して、確認したい事項に変動があるまで繰り返し実行すること
+
+### claude code remote environment cleanup
+
+不要なRemote Control環境を削除するコマンド:
+
+```bash
+TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w | python3 -c "import sys,json; print(json.load(sys.stdin)['claudeAiOauth']['accessToken'])")
+curl -X DELETE "https://api.anthropic.com/v1/environments/bridge/{env_id}" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "anthropic-beta: environments-2025-11-01"
+```
+
+env_idは `.claude/settings.local.json` の `remote.defaultEnvironmentId` で確認できる。削除後は `settings.local.json` のremote設定も削除すること。
+
+注意: GETによる一覧取得APIは2026-03時点で動作しない（betaヘッダーの矛盾エラー）。DELETEは動作する。
