@@ -140,7 +140,7 @@ main sessionのmodelがFable 5のときのみ有効。
 それ以外のmodelでは通常どおり自分で実装する。
 
 コードの実装作業（ファイル編集、commit、push、PR作成）は
-自分で直接行わず、`model: "sonnet"` を指定したsubagentに
+自分で直接行わず、`model: "opus"` を指定したsubagentに
 委譲する。
 
 - 委譲するのは実装作業のみ。調査、設計、方針決定、
@@ -148,11 +148,11 @@ main sessionのmodelがFable 5のときのみ有効。
 - subagentには背景、変更内容、検証方法、完了条件を
   具体的に指示する
 - PR作成を含む場合は github-pr-creator agent を
-  `model: "sonnet"` で起動する
+  `model: "opus"` で起動する
 
 理由:
 
-- 実装はSonnet 5で品質が担保できるためコストを抑えられる
+- 実装品質を優先し Opus 4.8 を使う
 - main sessionのcontextを調査・レビューに温存できる
 
 ### テストコード修正時
