@@ -1,0 +1,262 @@
+<!--
+  stock-flow-board テンプレート。Artifact publish 時に <head> が
+  自動付与されるため、本文と <style> のみを置く。doctype/html/head/body
+  は書かない。title と favicon は Artifact tool の引数で渡す。
+
+  各項目は <details class="entry"> で書く。summary が常時表示の見出し、
+  .expand が展開時に見える「何を話していたか」の詳細(検討した選択肢・
+  却下理由・根拠・経緯)。深掘りする背景が無い自明な項目は <details> を
+  使わず素の <li> テキストにする(展開の有無自体が背景の有無を表す)。
+
+  更新時は各 <!-- ANCHOR:xxx --> の直後の <li> を編集・追加する。
+  stock は再編成と重複排除、flow は追記(新しいものを上)。
+-->
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f8f7;
+    --card: #ffffff;
+    --border: #dde3e0;
+    --text: #191d1b;
+    --muted: #5e6a64;
+    --stock: #2f6f4f;
+    --flow: #3a5a8c;
+    --warn: #b9791a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131714;
+      --panel: #1a201d;
+      --card: #212824;
+      --border: #323b36;
+      --text: #e7ebe8;
+      --muted: #99a49d;
+      --stock: #6fca9a;
+      --flow: #86a9dc;
+      --warn: #e0a94a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff;
+    --panel: #f6f8f7;
+    --card: #ffffff;
+    --border: #dde3e0;
+    --text: #191d1b;
+    --muted: #5e6a64;
+    --stock: #2f6f4f;
+    --flow: #3a5a8c;
+    --warn: #b9791a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #131714;
+    --panel: #1a201d;
+    --card: #212824;
+    --border: #323b36;
+    --text: #e7ebe8;
+    --muted: #99a49d;
+    --stock: #6fca9a;
+    --flow: #86a9dc;
+    --warn: #e0a94a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .board { max-width: 1200px; margin: 0 auto; padding: 20px 20px 48px; }
+
+  header.board-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.board-head h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  header.board-head .updated {
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .region-label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  .region-label .en { color: var(--muted); font-weight: 600; }
+  #stock-region .region-label { color: var(--stock); }
+  #flow-region .region-label { color: var(--flow); }
+
+  /* 展開可能な項目の共通スタイル */
+  details.entry > summary {
+    list-style: none;
+    cursor: pointer;
+    position: relative;
+    padding-left: 15px;
+  }
+  details.entry > summary::-webkit-details-marker { display: none; }
+  details.entry > summary::before {
+    content: "\203A";
+    position: absolute;
+    left: 1px;
+    top: 0;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  details.entry[open] > summary::before { transform: rotate(90deg); }
+  .entry .expand {
+    margin-top: 8px;
+    padding-top: 8px;
+    padding-left: 15px;
+    border-top: 1px dotted var(--border);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .entry .expand p { margin: 0 0 6px; }
+  .entry .expand ul { margin: 4px 0; padding-left: 18px; }
+  .entry .expand .ref { color: var(--flow); font-size: 12.5px; }
+  @media (prefers-reduced-motion: reduce) {
+    details.entry > summary::before { transition: none; }
+  }
+
+  .stock-section { margin-bottom: 18px; }
+  .stock-section h2 {
+    font-size: 13px;
+    font-weight: 650;
+    margin: 0 0 8px;
+    color: var(--text);
+  }
+  .stock-section ul { list-style: none; margin: 0; padding: 0; }
+  .stock-section li {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--stock);
+    border-radius: 6px;
+    padding: 8px 11px;
+    margin-bottom: 7px;
+  }
+  .stock-section li code, .entry .expand code {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  li.open { border-left-color: var(--warn); }
+
+  .flow-list { list-style: none; margin: 0; padding: 0; }
+  .flow-list > li {
+    display: flex;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .flow-list > li:last-child { border-bottom: none; }
+  .flow-list .step {
+    flex: 0 0 auto;
+    min-width: 26px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--flow);
+    font-size: 12px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .flow-list .entry, .flow-list .flat { flex: 1 1 auto; min-width: 0; }
+  .flow-list .what { font-weight: 550; }
+
+  .empty { color: var(--muted); font-size: 13.5px; }
+</style>
+
+<!-- ANCHOR:doctitle -->
+<title>会話の主題</title>
+
+<div class="board">
+  <header class="board-head">
+    <!-- ANCHOR:title -->
+    <h1>会話の主題</h1>
+    <!-- ANCHOR:updated -->
+    <span class="updated">更新: YYYY-MM-DD · 第1回 (棚卸し)</span>
+  </header>
+
+  <div class="grid">
+    <section id="stock-region">
+      <p class="region-label">蓄積 <span class="en">stock</span></p>
+
+      <div class="stock-section">
+        <h2>未解決の論点・次アクション</h2>
+        <ul>
+          <!-- ANCHOR:open -->
+          <li class="empty">未解決の論点はない</li>
+        </ul>
+      </div>
+
+      <div class="stock-section">
+        <h2>確定した決定</h2>
+        <ul>
+          <!-- ANCHOR:decisions -->
+          <li class="empty">まだ確定した決定はない</li>
+        </ul>
+      </div>
+
+      <div class="stock-section">
+        <h2>事実・調査結論</h2>
+        <ul>
+          <!-- ANCHOR:findings -->
+          <li class="empty">まだ結論に達した調査はない</li>
+        </ul>
+      </div>
+
+      <div class="stock-section">
+        <h2>成果物</h2>
+        <ul>
+          <!-- ANCHOR:artifacts -->
+          <li class="empty">まだ成果物はない</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <section id="flow-region">
+      <p class="region-label">流れ <span class="en">flow</span></p>
+      <ul class="flow-list">
+        <!-- ANCHOR:flow -->
+        <li><span class="step">-</span><span class="flat empty">まだ記録された経緯はない</span></li>
+      </ul>
+    </section>
+  </div>
+</div>
