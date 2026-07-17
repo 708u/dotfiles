@@ -73,8 +73,12 @@ Agent tool を次の設定で呼ぶ。
 - `subagent_type`: `"general-purpose"`（ファイルを Read して
   推論させるため）
 - `run_in_background`: `false`（回答を待って提示するため）
-- `name`: `"fable-advisor"` 等（補足質問を SendMessage で
-  継続できるようにするため）
+- `name`: 指定しない。name を付けると subagent が teammate
+  扱いになり mailbox 経由の非同期起動へ切り替わる。teammate
+  の plain text は自動返却されず、SendMessage を明示しない
+  限り main に届かない（宛先名も環境依存）。無名なら最終
+  テキストが tool の戻り値として同期返却され、戻り値の
+  `agentId` で継続もできる
 - `prompt`: 下記テンプレート
 
 ```txt
@@ -131,10 +135,12 @@ main が裁定せず、未決事項としてユーザーに委ねる。
 ```
 
 Fable の回答が的外れ・一般論に留まった場合や、追加で問いたい
-ことが出た場合は、`fable-advisor` へ SendMessage で継続する
-（新規起動は context ゼロからのやり直しになるため避ける）。
-brief の不足が原因なら、どこが足りなかったかを述べたうえで
-補足を SendMessage で送る。
+ことが出た場合は、brief に前回の Q&A と補足を追記して Fable
+を再起動する。fresh context での再読はセカンドオピニオンの
+独立性（前回回答への anchoring 回避）とむしろ整合する。同一
+context を保ちたい場合のみ、起動時の戻り値に含まれる `agentId`
+へ SendMessage して継続する。brief の不足が原因なら、どこが
+足りなかったかを追記に明記する。
 
 ## ガード
 
