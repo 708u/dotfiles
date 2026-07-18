@@ -73,6 +73,14 @@ nix store 経由の二段階 symlink を作成する。
 新規追加は原則 abbr を使う。
 alias は上書き・グローバル・関数定義のみ。
 
+## git 運用の例外
+
+設定・skill・ドキュメントの小変更は、worktree を作らず
+main へ直接 commit / push してよい。global の
+「branch 作成時は twig を使う」ルールより本節を優先する。
+レビューを要する変更や複数ファイルにまたがる機能追加は
+twig で branch を切り PR を作成する。
+
 ## Nix の注意点
 
 - Determinate Nix 使用のため `nix.enable = false`
