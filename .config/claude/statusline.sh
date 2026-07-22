@@ -27,6 +27,7 @@ fi
 BOLD='\033[1m'
 DIM='\033[2m'
 CYAN='\033[36m'
+MAGENTA='\033[35m'
 GREEN='\033[32m'
 ORANGE='\033[38;5;215m'
 YELLOW='\033[33m'
@@ -41,6 +42,8 @@ fi
 
 # Get model and token info
 model=$(echo "$input" | jq -r '.model.display_name // "Claude"')
+# effort は reasoning 非対応モデルでは absent になる
+effort=$(echo "$input" | jq -r '.effort.level // empty')
 context_size=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')
 
 # current_usageから実際のコンテキスト使用量を計算
@@ -84,6 +87,10 @@ BAR=""
 [ "$EMPTY" -gt 0 ] && printf -v PAD "%${EMPTY}s" && BAR="${BAR}${DIM}${BAR_COLOR}${PAD// /░}"
 BAR="${BAR}${RESET}"
 
+# Lines changed
+lines_added=$(echo "$input" | jq -r '.cost.total_lines_added // 0')
+lines_removed=$(echo "$input" | jq -r '.cost.total_lines_removed // 0')
+
 # Duration
 DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
 MINS=$((DURATION_MS / 60000))
@@ -104,8 +111,30 @@ if [[ -n "$worktree_name" ]]; then
 fi
 
 # Line 2: model, cost, duration, rate limits
-line2=("${DIM}${model}${RESET}")
+model_lower=$(echo "$model" | tr '[:upper:]' '[:lower:]')
+case "$model_lower" in
+  *opus*) model_color="$MAGENTA" ;;
+  *sonnet*) model_color="$CYAN" ;;
+  *haiku*) model_color="$GREEN" ;;
+  *fable*) model_color="$RED" ;;
+  *) model_color="$DIM" ;;
+esac
+model_chip="${model_color}${model}${RESET}"
+if [[ -n "$effort" ]]; then
+  case "$effort" in
+    low) effort_color="$DIM" ;;
+    medium) effort_color="$GREEN" ;;
+    high) effort_color="$YELLOW" ;;
+    xhigh | max) effort_color="$RED" ;;
+    *) effort_color="$DIM" ;;
+  esac
+  model_chip="${model_chip} ${effort_color}${effort}${RESET}"
+fi
+line2=("$model_chip")
 line2+=("${DIM}dur${RESET} ${MINS}m ${SECS}s")
+if (( lines_added > 0 || lines_removed > 0 )); then
+  line2+=("${GREEN}+${lines_added}${RESET} ${RED}-${lines_removed}${RESET}")
+fi
 if [[ -n "$five_h" ]]; then
   five_h_int=$(printf "%.0f" "$five_h")
   seven_d_int=$(printf "%.0f" "$seven_d")
