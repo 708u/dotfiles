@@ -5,9 +5,8 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = "zap";
-      # Homebrew 5.x は `brew bundle --cleanup` に確認フラグを要求するため付与する
-      extraFlags = [ "--force-cleanup" ];
+      # Homebrew 7.x は `--cleanup` フラグを廃止しており、
+      # nix-darwin の cleanup オプションは activation を失敗させる。
     };
 
     taps = [
@@ -50,10 +49,10 @@
       "orbstack"
       "postman"
       "raycast"
+      "realvnc-connect-viewer"
       "session-manager-plugin"
       "tableplus"
       "visual-studio-code"
-      "vnc-viewer"
       "zoom"
     ];
 

@@ -89,8 +89,8 @@ twig で branch を切り PR を作成する。
   (`extraConfig`, `aliases` は deprecated)
 - `programs.zsh` は `initContent` を使用
   (`initExtra`, `initExtraFirst` は deprecated)
-- `homebrew.nix` の `cleanup = "zap"` により
-  記載のない cask は自動削除される
+- `homebrew.nix` の cleanup は無効。記載のない cask は
+  自動削除されないため、手動で `brew uninstall` する
 
 ## Claude Code プラグイン (手動セットアップ)
 
