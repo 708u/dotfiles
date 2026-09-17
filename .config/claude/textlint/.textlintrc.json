@@ -1,0 +1,11 @@
+{
+  "plugins": ["html"],
+  "rules": {
+    "preset-ai-words-ja": {
+      "no-ai-words": {
+        "dictionaryPath": "./dictionary.json"
+      }
+    },
+    "@textlint-ja/preset-ai-writing": true
+  }
+}
