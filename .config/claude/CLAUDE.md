@@ -295,12 +295,6 @@ markdownlintの指摘事項に抵触しないようにmarkdownを変更する。
 hello world
 ```
 
-MD013/line-lengthを遵守する。
-
-```txt
-[Expected: 80; Actual: 108]
-```
-
 ### コメント記述ガイドライン
 
 言語非依存の方針。語調・表記は「自然言語生成」に従う。
