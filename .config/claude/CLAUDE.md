@@ -176,6 +176,27 @@ localのtestで完結させる。
 
 自分がClaude Codeであることをcommentに含める。
 
+## git操作
+
+### branch 作成時は twig を使う
+
+branch を作成するときは worktree を使う。
+`git switch -c` や `git checkout -b` で直接 branch を切らない。
+
+着手前に必ず `/twig:twig-guide` skill を読み、
+twig の操作を確認してから実装する。
+
+twig で扱う主な操作:
+
+- 新規 branch の worktree 作成
+- 変更を別 branch へ移動 (carry)
+- merged worktree の削除
+
+理由:
+
+- branch 切り替え時に stash が不要になる
+- 複数 branch を並行して作業できる
+
 ## multi-agent orchestration
 
 Orca orchestration は worker を起動して結果を待ち受ける作業にだけ使う。
