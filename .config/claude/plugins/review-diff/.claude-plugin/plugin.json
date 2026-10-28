@@ -1,0 +1,6 @@
+{
+  "name": "review-diff",
+  "version": "0.1.0",
+  "description": "worktree を切り替えながら diff に行コメントを蓄積し、まとめて Claude に送るレビュー用 pane",
+  "types": "./types/index.d.ts"
+}

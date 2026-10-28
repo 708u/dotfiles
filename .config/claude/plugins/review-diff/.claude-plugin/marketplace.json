@@ -1,0 +1,15 @@
+{
+  "name": "review-diff",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "review-diff",
+      "source": "./",
+      "description": "worktree を切り替えながら diff に行コメントを蓄積し、まとめて Claude に送るレビュー用 pane",
+      "version": "0.1.0"
+    }
+  ]
+}
