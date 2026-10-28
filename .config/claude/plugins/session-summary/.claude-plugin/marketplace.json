@@ -9,7 +9,7 @@
       "name": "session-summary",
       "source": "./",
       "description": "現在のセッションの話題・未決定事項・設定と結論・次の作業を右のペインに表示する",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

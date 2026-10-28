@@ -44,6 +44,7 @@ test("ターン完了後にペインへ要約が表示される", async ($, on) 
     },
   ];
   on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
   on("model.complete", (_, e) => {
     prompt = e.prompt;
     return { value: { isAnswered: true, text: REPLY, usage: USAGE } };
@@ -74,6 +75,39 @@ test("ターン完了後にペインへ要約が表示される", async ($, on) 
   );
   expect(prompt).toContain("使用ツール: Write");
   expect(prompt).not.toContain("内部");
+  await ui.unmount();
+});
+
+test("描画先の無い -p の実行ではターンが終わっても要約しない", async ($, on) => {
+  let calls = 0;
+  on("session.messages", () => ({
+    value: [{ role: "user", text: "要約ペインを作りたい", toolUses: [] }],
+  }));
+  on("session.surfaces", () => ({ value: [] }));
+  on("model.complete", () => {
+    calls++;
+    return { value: { isAnswered: true, text: REPLY, usage: USAGE } };
+  });
+  on("clock.now", () => ({ value: 0 }));
+  on("clock.after", () => ({ value: undefined }));
+  on("turn.complete", (_, e) => ({ text: e.answer }));
+
+  await $.turn.complete({
+    answer: "",
+    durationMs: 1,
+    isAborted: false,
+    turnId: "t1",
+    reason: "answer",
+  });
+
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  // 要約が走っていれば反映される分だけ待ってから、走っていないことを確かめる
+  for (let i = 0; i < 50; i++) {
+    if (await ui.find({ type: "Text", text: /haiku/ })) break;
+  }
+
+  expect(calls).toBe(0);
+  expect(await ui.find({ type: "Text", text: /haiku/ })).toBeUndefined();
   await ui.unmount();
 });
 
@@ -143,9 +177,9 @@ test("項目へのコメントを下書きにため、ペイン上部の送信�
 
   expect(opened).toEqual([true]);
   await ui.input({ key: "comment-target", text: "submit で送る" });
-  expect(
-    (await ui.find({ type: "Text", text: /-> submit/ }))?.text
-  ).toBe("  -> submit で送る");
+  expect((await ui.find({ type: "Text", text: /-> submit/ }))?.text).toBe(
+    "  -> submit で送る"
+  );
   await ui.input({ key: "comment-general", text: "全体へのメモ" });
 
   expect(
@@ -204,4 +238,80 @@ test("ペインからキーが外れると編集中の欄を閉じて下書き�
     (await blurred.find({ type: "Text", text: /-> 残したい/ }))?.text
   ).toBe("-> 残したい");
   await blurred.unmount();
+});
+
+test("図のタブで会話を mermaid の画像にして表示する", async ($, on) => {
+  const messages: SessionMessage[] = [
+    { role: "user", text: "図を出したい", toolUses: [] },
+  ];
+  on("session.messages", () => ({ value: messages }));
+  let model = "";
+  on("model.complete", (_, e) => {
+    model = e.model;
+    return {
+      value: {
+        isAnswered: true,
+        text: JSON.stringify({
+          title: "表示の切り替え",
+          mermaid: 'flowchart TD\n  A["要約"] --> B["図"]',
+        }),
+        usage: USAGE,
+      },
+    };
+  });
+  on("clock.after", () => ({ value: undefined }));
+  on("env.get", () => ({ value: "/tmp/" }));
+  on("session.id", () => ({ value: "s1" }));
+  const argvs: string[][] = [];
+  let stdin = "";
+  on("process.run", (_, e) => {
+    argvs.push([...e.argv]);
+    if (e.argv[0] === "mmdc") stdin = e.init?.stdin ?? "";
+    return {
+      value: {
+        exitCode: 0,
+        stdout: "",
+        stderr: "",
+        isStdoutTruncated: false,
+        isStderrTruncated: false,
+      },
+    };
+  });
+  // 幅 8、高さ 6 の PNG。縦横比だけが画像の行数に効く
+  on("fs.read", () => ({
+    value: {
+      base64:
+        "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAADElEQVR4nGNgGA4AAADGAAHAAMfmAAAAAElFTkSuQmCC",
+    },
+  }));
+
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await ui.press({ key: "toggle-view" });
+  for (let i = 0; i < 50; i++) {
+    if (await ui.find({ type: "Image" })) break;
+  }
+
+  expect(model).toBe("sonnet");
+  expect(stdin).toBe('flowchart TD\n  A["要約"] --> B["図"]');
+  expect(argvs.find((argv) => argv[0] === "mmdc")).toContain(
+    "/tmp/claude-session-summary/s1.png"
+  );
+  const image = await ui.find({ type: "Image" });
+  expect(image?.props).toMatchObject({
+    source: {
+      png:
+        "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAADElEQVR4nGNgGA4AAADGAAHAAMfmAAAAAElFTkSuQmCC",
+    },
+    columns: 25,
+    rows: 9,
+  });
+  expect(await ui.find({ key: "pan-right" })).toBeUndefined();
+
+  for (let i = 0; i < 4; i++) await ui.press({ key: "zoom-in" });
+  expect((await ui.find({ type: "Image" }))?.props).toMatchObject({
+    columns: 75,
+    rows: 28,
+  });
+  expect(await ui.find({ key: "pan-right" })).toBeDefined();
+  await ui.unmount();
 });

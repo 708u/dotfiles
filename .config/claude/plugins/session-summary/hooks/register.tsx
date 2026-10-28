@@ -3,7 +3,10 @@ import type { EngineInterface, Register, SessionMessage } from "claude-code";
 
 import type {
   CommentDrafts,
+  DiagramImage,
   DraftComment,
+  PaneView,
+  SessionDiagram,
   SessionSummary,
   Setting,
 } from "../types";
@@ -44,6 +47,26 @@ const comments = atom(
   { plugin: "session-summary", key: "comments" } as const,
   EMPTY_DRAFTS,
   { shape: "comments-1" }
+);
+
+const EMPTY_DIAGRAM: SessionDiagram = {
+  title: "",
+  mermaid: "",
+  image: null,
+  messageCount: 0,
+  status: "idle",
+};
+
+const diagram = atom(
+  { plugin: "session-summary", key: "diagram" } as const,
+  EMPTY_DIAGRAM,
+  { shape: "diagram-1" }
+);
+
+const paneView = atom(
+  { plugin: "session-summary", key: "view" } as const,
+  "summary" as PaneView,
+  { shape: "view-1" }
 );
 
 // Input は描画のたびに value で上書きされるため、入力途中の文字を入力欄ごとに描画をまたいで保持する
@@ -233,6 +256,245 @@ const summarize = async ($: EngineInterface): Promise<void> => {
   }
 };
 
+const DIAGRAM_SYSTEM = [
+  "あなたは開発者と AI アシスタントの会話を図にする担当です。",
+  "直近の会話ログを受け取り、いま話している内容の理解を助ける mermaid の図を 1 つ作ります。",
+  "話題に合う種類を選びます。処理や判断の流れは flowchart TD、やり取りの順序は sequenceDiagram、状態の移り変わりは stateDiagram-v2、構成要素の関係は flowchart TD か classDiagram を使います。",
+  "表示先は縦に長く幅の狭いペインです。flowchart は上から下へ流し、横に 4 個以上並べません。ノードは 15 個以内にします。",
+  'ラベルは日本語で短く書きます。flowchart のノードは A["ラベル"] のように二重引用符で囲み、ラベルの中に二重引用符を入れません。',
+  "style、classDef、%%{init}%%、コメントは使いません。",
+  "出力は次の形の JSON オブジェクト 1 つだけとし、前後に文章やコードフェンスを付けません。",
+  '{"title": string, "mermaid": string}',
+  "title は図が表す内容を 30 文字以内で書きます。",
+].join("\n");
+
+// 図にする内容の整理と mermaid の記述を 1 回の呼び出しで行う。構文の正しさと配置の判断で出来が分かれるため、要約より上のモデルを使う
+const DIAGRAM_MODEL = "sonnet";
+// mmdc の構文エラーを渡して書き直させる回数。図 1 枚の更新にかかる時間を抑えるため 1 回に留める
+const DIAGRAM_RETRIES = 1;
+// 端末の文字セルは縦が横の約 2 倍のため、画像の縦横比から行数を出すときに掛ける
+const CELL_ASPECT = 0.5;
+
+let isDrawing = false;
+let isDrawPending = false;
+
+// 倍率 100% の図の幅を、ペインの幅に対する割合で表す。幅いっぱいでは図の全体を見渡しにくいため半分にする
+const BASE_WIDTH_RATIO = 0.5;
+// 端末の画像は 255 桁が上限のため、それを超える倍率は効かない
+const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
+let zoomIndex = ZOOM_LEVELS.indexOf(1);
+// 拡大した図はペインの幅からはみ出し、ペインは横にスクロールしないため、左端をずらす桁数を mod 側で持つ
+let panColumns = 0;
+// 端末にファイルを読ませる方式は端末によって描かれないため、PNG のバイト列を渡す。描画のたびに読み直さないよう、読んだ図を世代ごとに覚えておく
+let pngCache: { key: string; base64: string } | null = null;
+// 倍率を変えた直後は、はみ出した図の真ん中を見せる
+let shouldCenterPan = true;
+
+const parseDiagramReply = (
+  reply: string
+): { title: string; mermaid: string } | undefined => {
+  const start = reply.indexOf("{");
+  const end = reply.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      const parsed = JSON.parse(reply.slice(start, end + 1)) as Record<
+        string,
+        unknown
+      >;
+      if (typeof parsed.mermaid === "string" && parsed.mermaid.trim() !== "") {
+        return {
+          title: typeof parsed.title === "string" ? parsed.title : "",
+          mermaid: parsed.mermaid,
+        };
+      }
+    } catch {
+      // JSON の代わりにコードフェンスで返すことがあるので、下でそちらを試す
+    }
+  }
+  const fence = reply.match(/```mermaid\s*\n([\s\S]*?)```/);
+
+  return fence?.[1] === undefined
+    ? undefined
+    : { title: "", mermaid: fence[1] };
+};
+
+const BASE64_DIGITS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const decodeBase64Head = (text: string, count: number): number[] => {
+  const bytes: number[] = [];
+  let buffer = 0;
+  let bits = 0;
+  for (const char of text) {
+    const digit = BASE64_DIGITS.indexOf(char);
+    if (digit < 0 || bytes.length >= count) break;
+    buffer = ((buffer << 6) | digit) & 0xffffff;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((buffer >> bits) & 0xff);
+    }
+  }
+  return bytes;
+};
+
+// PNG の先頭 24 バイトのうち 16〜23 バイト目が IHDR の幅と高さ (ビッグエンディアン)
+const readPngSize = (
+  base64: string
+): { width: number; height: number } | undefined => {
+  const head = decodeBase64Head(base64.slice(0, 32), 24);
+  if (head.length < 24) return undefined;
+  const at = (offset: number) =>
+    head
+      .slice(offset, offset + 4)
+      .reduce((value, byte) => value * 256 + byte, 0);
+
+  return { width: at(16), height: at(20) };
+};
+
+const renderMermaid = async (
+  $: EngineInterface,
+  mermaid: string,
+  path: string
+): Promise<{ error: string } | { width: number; height: number }> => {
+  const result = await $.process.run(
+    [
+      "mmdc",
+      "-q",
+      "-i",
+      "-",
+      "-o",
+      path,
+      "-t",
+      "dark",
+      "-b",
+      "transparent",
+      "-s",
+      "2",
+    ],
+    { stdin: mermaid, timeoutMs: 60000 }
+  );
+  if (result.exitCode !== 0) {
+    return { error: clip(result.stderr.trim() || result.stdout.trim(), 1500) };
+  }
+  const { base64 } = await $.fs.read(path, { as: "bytes" });
+  const size = readPngSize(base64);
+
+  return size ?? { error: "PNG の大きさを読み取れませんでした" };
+};
+
+const failDiagram = (
+  $: EngineInterface,
+  error: string
+): Promise<SessionDiagram> =>
+  update(
+    $,
+    diagram,
+    (current): SessionDiagram => ({ ...current, status: "error", error })
+  );
+
+const drawDiagram = async ($: EngineInterface): Promise<void> => {
+  // ターンが連続して終わったときに mmdc を並行して走らせず、最後に 1 回だけやり直す
+  if (isDrawing) {
+    isDrawPending = true;
+    return;
+  }
+  isDrawing = true;
+  try {
+    const messages = await $.session.messages();
+    const transcript = buildTranscript(messages);
+    if (transcript === "") return;
+    const previous = await update(
+      $,
+      diagram,
+      (current): SessionDiagram => ({
+        ...current,
+        status: "running",
+        error: undefined,
+      })
+    );
+    const dir = `${((await $.env.get("TMPDIR")) ?? "/tmp").replace(
+      /\/$/,
+      ""
+    )}/claude-session-summary`;
+    await $.process.run(["mkdir", "-p", dir]);
+    const path = `${dir}/${await $.session.id()}.png`;
+
+    let prompt = `# 直近の会話ログ\n${transcript}`;
+    for (let attempt = 0; attempt <= DIAGRAM_RETRIES; attempt++) {
+      const result = await $.model.complete({
+        model: DIAGRAM_MODEL,
+        system: DIAGRAM_SYSTEM,
+        prompt,
+        effort: "high",
+        maxTokens: 8000,
+        timeoutMs: 120000,
+      });
+      if (!result.isAnswered) {
+        await failDiagram($, result.reason);
+        return;
+      }
+      const parsed = parseDiagramReply(result.text);
+      if (parsed === undefined) {
+        await failDiagram($, "mermaid を読み取れませんでした");
+        return;
+      }
+      const rendered = await renderMermaid($, parsed.mermaid, path);
+      if ("error" in rendered) {
+        if (attempt === DIAGRAM_RETRIES) {
+          await failDiagram($, `mmdc: ${rendered.error}`);
+          return;
+        }
+        prompt = `${prompt}\n\n# 前回の出力\n${parsed.mermaid}\n\n# mmdc のエラー\n${rendered.error}\n\nエラーを直した図を同じ JSON の形で返してください。`;
+        continue;
+      }
+      const image: DiagramImage = {
+        path,
+        ...rendered,
+        generation: (previous.image?.generation ?? 0) + 1,
+      };
+      await update(
+        $,
+        diagram,
+        (): SessionDiagram => ({
+          title: parsed.title,
+          mermaid: parsed.mermaid,
+          image,
+          messageCount: messages.length,
+          status: "idle",
+        })
+      );
+      return;
+    }
+  } catch (error) {
+    // mmdc が入っていないと process.run が reject する
+    const message = String(error);
+    await failDiagram(
+      $,
+      /ENOENT|not found|cannot start/i.test(message)
+        ? "mmdc が見つかりません。npm i -g @mermaid-js/mermaid-cli で入れてください"
+        : message
+    );
+  } finally {
+    isDrawing = false;
+    if (isDrawPending) {
+      isDrawPending = false;
+      void drawDiagram($);
+    }
+  }
+};
+
+// 図はモデル呼び出しと mmdc で時間がかかるため、図を見ていて会話が進んだときだけ作り直す
+const drawDiagramIfStale = async ($: EngineInterface): Promise<void> => {
+  const [current, messages] = await Promise.all([
+    read($, diagram),
+    $.session.messages(),
+  ]);
+  if (current.image === null || current.messageCount !== messages.length) {
+    await drawDiagram($);
+  }
+};
+
 // 全角の文字は 2 桁を占めるため、折り返し後の行数を見積もるときに 2 として数える
 const isWide = (code: number): boolean =>
   (code >= 0x1100 && code <= 0x115f) ||
@@ -303,9 +565,13 @@ export const register: Register = (on) => {
   on("turn.complete", async ($, e, next) => {
     const result = await next(e);
     // サブエージェントのターンと中断されたターンは会話の区切りではないので要約しない
-    if (e.agentId === undefined && !e.isAborted) {
-      // turn.complete の処理時間に要約の待ち時間を含めないよう、タイマーで切り離す
-      $.clock.after(0, () => void summarize($));
+    if (e.agentId !== undefined || e.isAborted) return result;
+    // -p の実行や SDK はペインを描く先が無く、要約しても誰も読まないままモデルの呼び出しだけが毎ターン走る
+    if ((await $.session.surfaces()).length === 0) return result;
+    // turn.complete の処理時間に要約の待ち時間を含めないよう、タイマーで切り離す
+    $.clock.after(0, () => void summarize($));
+    if ((await read($, paneView)) === "diagram") {
+      $.clock.after(0, () => void drawDiagram($));
     }
 
     return result;
@@ -331,11 +597,15 @@ export const register: Register = (on) => {
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const elements = $.ui.resolve(e);
-    const { Box, Text, Button } = elements;
+    const { Box, Text, Button, Code } = elements;
     // mobile の要素表には Input が無いため、入力欄はそれ以外の描画先でだけ出す
     const Input = "Input" in elements ? elements.Input : undefined;
+    // 画像を描けるのは terminal だけなので、それ以外では mermaid のコードを出す
+    const Image = "Image" in elements ? elements.Image : undefined;
     const state = await read($, summary);
     const drafts = await read($, comments);
+    const view = await read($, paneView);
+    const diagramState = await read($, diagram);
 
     // Esc でキーが外れると入力欄の中身が空になり、編集中の下書きが消えたように見えるため、開いている欄を閉じて元の表示に戻す
     if (wasFocused && !e.props.isFocused) {
@@ -548,13 +818,151 @@ export const register: Register = (on) => {
     );
 
     // 更新の進み具合は出さず、失敗したときだけ理由を出す。出さないと要約が古いままの理由が分からない
+    const shown = view === "diagram" ? diagramState : state;
     const errorText =
-      state.status === "error" ? `更新に失敗: ${state.error ?? ""}` : null;
+      shown.status === "error" ? `更新に失敗: ${shown.error ?? ""}` : null;
+
+    const switchView = async (next: PaneView) => {
+      if (next === view) return;
+      // 要約と図で本文の長さが違うため、前のタブのスクロール位置を持ち越さない
+      bodyOffset = 0;
+      await update($, paneView, () => next);
+      if (next === "diagram")
+        $.clock.after(0, () => void drawDiagramIfStale($));
+    };
+    // 1 つのボタンで切り替え、表示中の側を色と太字で示す
+    const viewLabel = (key: PaneView, label: string) => (
+      <Text
+        // dimColor だけでは表示中の側との差が小さいため、区切り線と同じ subtle の色をさらに薄くする
+        color={view === key ? "suggestion" : "subtle"}
+        bold={view === key}
+        dimColor={view !== key}
+      >
+        {label}
+      </Text>
+    );
+    const viewToggle = (
+      <Button
+        key="toggle-view"
+        onPress={() =>
+          void switchView(view === "diagram" ? "summary" : "diagram")
+        }
+      >
+        {viewLabel("summary", "要約")}
+        <Text color="subtle" dimColor>
+          {" / "}
+        </Text>
+        {viewLabel("diagram", "図")}
+      </Button>
+    );
+
+    const columns = e.props.bodyColumns;
+    const image = diagramState.image;
+    const pngKey = image === null ? "" : `${image.path}#${image.generation}`;
+    if (image !== null && pngCache?.key !== pngKey) {
+      const bytes = await $.fs
+        .read(image.path, { as: "bytes" })
+        .catch(() => undefined);
+      pngCache =
+        bytes === undefined ? null : { key: pngKey, base64: bytes.base64 };
+    }
+    const png = pngCache?.key === pngKey ? pngCache.base64 : undefined;
+    const zoom = ZOOM_LEVELS[zoomIndex] ?? 1;
+    // 縦長の図を広げると端末の上限の行数を超えるため、そのときは幅を縮めて縦横比を保つ
+    const imageSize = (() => {
+      if (image === null) return { columns: 0, rows: 0 };
+      const ratio = (image.height / Math.max(1, image.width)) * CELL_ASPECT;
+      const fitColumns = Math.max(
+        1,
+        Math.min(
+          Math.round(columns * BASE_WIDTH_RATIO * zoom),
+          255,
+          Math.floor(255 / Math.max(ratio, 0.001))
+        )
+      );
+
+      return {
+        columns: fitColumns,
+        rows: Math.min(255, Math.max(1, Math.round(fitColumns * ratio))),
+      };
+    })();
+    const maxPanColumns = Math.max(0, imageSize.columns - columns);
+    if (shouldCenterPan) {
+      panColumns = Math.floor(maxPanColumns / 2);
+      shouldCenterPan = false;
+    }
+    panColumns = Math.min(panColumns, maxPanColumns);
+    // ペインより狭い図は左に寄るため、余った幅の半分だけ右へずらして真ん中に置く
+    const imageLeft =
+      maxPanColumns > 0
+        ? -panColumns
+        : Math.floor((columns - imageSize.columns) / 2);
+    const panStep = Math.max(1, Math.floor(columns / 2));
+
+    const setZoom = (index: number) => {
+      zoomIndex = Math.min(ZOOM_LEVELS.length - 1, Math.max(0, index));
+      shouldCenterPan = true;
+      $.ui.invalidate("ui.render");
+    };
+    const pan = (by: number) => {
+      panColumns = Math.min(maxPanColumns, Math.max(0, panColumns + by));
+      $.ui.invalidate("ui.render");
+    };
+    const zoomControls = view === "diagram" && image !== null && (
+      <Box flexDirection="row" flexShrink={0} gap={1}>
+        <Button key="zoom-out" onPress={() => setZoom(zoomIndex - 1)}>
+          -
+        </Button>
+        <Text>{Math.round(zoom * 100)}%</Text>
+        <Button key="zoom-in" onPress={() => setZoom(zoomIndex + 1)}>
+          +
+        </Button>
+        {maxPanColumns > 0 && (
+          <>
+            <Button key="pan-left" onPress={() => pan(-panStep)}>
+              ◀
+            </Button>
+            <Button key="pan-right" onPress={() => pan(panStep)}>
+              ▶
+            </Button>
+          </>
+        )}
+      </Box>
+    );
+    const diagramNote =
+      image !== null
+        ? null
+        : diagramState.status === "running"
+        ? "図を作成しています"
+        : "まだ図がありません。更新を押すと作成します";
+    const diagramBody = (
+      <Box flexDirection="column" marginTop={1}>
+        {heading(diagramState.title === "" ? "図" : diagramState.title)}
+        {diagramNote !== null && <Text dimColor>{diagramNote}</Text>}
+        {image !== null &&
+          (Image !== undefined && png === undefined ? (
+            <Text color="error">図の画像を読み込めませんでした</Text>
+          ) : Image !== undefined && png !== undefined ? (
+            <Box width={columns} overflow="hidden">
+              <Box flexShrink={0} marginLeft={imageLeft}>
+                <Image
+                  key="diagram"
+                  source={{ png }}
+                  columns={imageSize.columns}
+                  rows={imageSize.rows}
+                  alt={diagramState.title === "" ? "図" : diagramState.title}
+                />
+              </Box>
+            </Box>
+          ) : (
+            <Code language="mermaid" source={diagramState.mermaid} />
+          ))}
+      </Box>
+    );
 
     const commentHint = "行を押すと、その行へのコメントを書ける";
 
     // 本文の行数は描かれた結果から得られないため、文字幅とペインの幅から見積もり、スクロールの上限に使う
-    const columns = e.props.bodyColumns;
     // 削除ボタンと間隔の分だけ、下書きの文が使える幅は狭い
     const draftColumns = Math.max(1, columns - 9);
     const inputRows = Input === undefined ? 0 : 1;
@@ -579,7 +987,7 @@ export const register: Register = (on) => {
       (items.length === 0
         ? 1
         : items.reduce((sum, text) => sum + itemRows(text, "- "), 0));
-    const bodyRows =
+    const summaryRows =
       3 +
       (state.topic === "" ? 1 : itemRows(state.topic, "")) +
       sectionRows(state.open) +
@@ -588,8 +996,21 @@ export const register: Register = (on) => {
       3 +
       wrappedRows(commentHint, columns) +
       bottomDrafts.reduce((sum, draft) => sum + draftRows(draft, true), 0);
+    const bodyRows =
+      view === "diagram"
+        ? 3 +
+          wrappedRows(
+            diagramState.title === "" ? "図" : diagramState.title,
+            columns
+          ) +
+          (diagramNote === null ? 0 : wrappedRows(diagramNote, columns)) +
+          (Image === undefined
+            ? diagramState.mermaid.split("\n").length
+            : imageSize.rows)
+        : summaryRows;
     const headerRows =
       1 +
+      (zoomControls === false ? 0 : 1) +
       (errorText === null ? 0 : wrappedRows(errorText, columns)) +
       inputRows;
     const viewportRows = Math.max(1, e.props.scroll.bodyRows - headerRows);
@@ -602,7 +1023,13 @@ export const register: Register = (on) => {
         <Box flexDirection="column" flexShrink={0}>
           {/* 幅の狭い dock ではステータス文と同じ行に置くとボタンが押し出されるため、ボタンだけの行にする */}
           <Box flexDirection="row" flexShrink={0} gap={1}>
-            <Button key="refresh" onPress={() => void summarize($)}>
+            {viewToggle}
+            <Button
+              key="refresh"
+              onPress={() =>
+                void (view === "diagram" ? drawDiagram($) : summarize($))
+              }
+            >
               更新
             </Button>
             {drafts.items.length > 0 && (
@@ -611,6 +1038,7 @@ export const register: Register = (on) => {
               </Button>
             )}
           </Box>
+          {zoomControls}
           {errorText !== null && <Text color="error">{errorText}</Text>}
           {commentInput(
             GENERAL_INPUT,
@@ -625,22 +1053,28 @@ export const register: Register = (on) => {
           overflow="hidden"
         >
           <Box flexDirection="column" flexShrink={0} marginTop={-bodyOffset}>
-            <Box flexDirection="column" marginTop={1}>
-              {heading("いまの話題")}
-              {state.topic === "" ? (
-                <Text dimColor>なし</Text>
-              ) : (
-                item(`${ROW_KEY_PREFIX}topic`, state.topic, "")
-              )}
-            </Box>
-            {section("open", "未決定・判断待ち", state.open)}
-            {section("settings", "現在の設定・結論", settingTexts)}
-            {section("next", "次にやること", state.next)}
-            <Box flexDirection="column" marginTop={1}>
-              {heading(`コメント (下書き ${drafts.items.length} 件)`)}
-              <Text dimColor>{commentHint}</Text>
-              {bottomDrafts.map((draft) => draftView(draft, true))}
-            </Box>
+            {view === "diagram" ? (
+              diagramBody
+            ) : (
+              <>
+                <Box flexDirection="column" marginTop={1}>
+                  {heading("いまの話題")}
+                  {state.topic === "" ? (
+                    <Text dimColor>なし</Text>
+                  ) : (
+                    item(`${ROW_KEY_PREFIX}topic`, state.topic, "")
+                  )}
+                </Box>
+                {section("open", "未決定・判断待ち", state.open)}
+                {section("settings", "現在の設定・結論", settingTexts)}
+                {section("next", "次にやること", state.next)}
+                <Box flexDirection="column" marginTop={1}>
+                  {heading(`コメント (下書き ${drafts.items.length} 件)`)}
+                  <Text dimColor>{commentHint}</Text>
+                  {bottomDrafts.map((draft) => draftView(draft, true))}
+                </Box>
+              </>
+            )}
           </Box>
         </Box>
       </Box>
