@@ -1,0 +1,15 @@
+{
+  "name": "cache-keepalive",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "cache-keepalive",
+      "source": "./",
+      "description": "放置中に prompt cache の期限が近づいたら fork で読み直して期限を延ばす",
+      "version": "0.1.0"
+    }
+  ]
+}
