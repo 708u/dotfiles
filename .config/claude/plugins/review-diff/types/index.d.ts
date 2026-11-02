@@ -34,6 +34,8 @@ export type CommentDraft = {
   body: string;
 };
 
+export type CommentEdit = { id: string; place: "list" | "card" };
+
 export type PrInfo = { number: number; url: string };
 
 export type PrThread = {
@@ -87,6 +89,7 @@ declare module "claude-code" {
       prThreads: Shaped<PrThread[]>;
       includedThreads: string[];
       collapsedComments: string[];
+      editing: Shaped<CommentEdit | null>;
       status: string | null;
     };
   }

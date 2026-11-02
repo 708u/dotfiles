@@ -47,8 +47,8 @@ type GhAnswers = { view: string; graphql: string };
 async function startSession(
   $: Engine,
   on: On,
-  diff = DIFF,
-  gh: GhAnswers | null = null
+  diff: string | (() => string) = DIFF,
+  gh: GhAnswers | null = null,
 ) {
   const submitted: string[] = [];
   const diffCwds: string[] = [];
@@ -79,7 +79,7 @@ async function startSession(
     if (args.startsWith("worktree list")) return out(WORKTREES);
     if (args.startsWith("diff")) {
       diffCwds.push(e.init?.cwd ?? "");
-      return out(diff);
+      return out(typeof diff === "function" ? diff() : diff);
     }
 
     return out("");
@@ -127,17 +127,17 @@ test("複数行をドラッグしてコメントし Claude に送ると prompt �
     await ui.input({ key: "comment", text: "定数にする" });
     expect(await ui.find({ type: "Text", text: /^ 自分 $/ })).toBeDefined();
     expect((await ui.find({ type: "Text", text: /コメント 1 件/ }))?.text).toBe(
-      "コメント 1 件"
+      "コメント 1 件",
     );
 
     await ui.press({ key: "submit" });
     const text = submitted.at(-1) ?? "";
     expect(text).toContain("対象 worktree: /repo-wt/feat (branch: feat)");
-    expect(text).toContain("1. app/a.rb:L2-L3");
+    expect(text).toContain("1. @app/a.rb:L2-L3");
     expect(text).toContain("     +   2\n     +   3");
     expect(text).toContain("コメント: 定数にする");
     expect(
-      await ui.find({ type: "Text", text: /コメント 0 件/ })
+      await ui.find({ type: "Text", text: /コメント 0 件/ }),
     ).toBeDefined();
 
     await ui.unmount();
@@ -160,7 +160,7 @@ test("クリック後に Shift+↓ で範囲を広げ Enter でコメントで�
   await ui.press({ key: "submit" });
 
   const text = submitted.at(-1) ?? "";
-  expect(text).toContain("1. app/a.rb:L1 (削除行 L2 を含む)");
+  expect(text).toContain("1. @app/a.rb:L1 (削除行 L2 を含む)");
   expect(text).toContain("       def foo\n     -   1");
   await ui.unmount();
 });
@@ -180,7 +180,7 @@ test("Shift+↑ を続けて押すと上方向へ途切れずに広がる", asyn
   await ui.input({ key: "comment", text: "まとめて見直す" });
   await ui.press({ key: "submit" });
 
-  expect(submitted.at(-1)).toContain("1. app/a.rb:L1-L3 (削除行 L2 を含む)");
+  expect(submitted.at(-1)).toContain("1. @app/a.rb:L1-L3 (削除行 L2 を含む)");
   await ui.unmount();
 });
 
@@ -206,6 +206,97 @@ test("入力欄を閉じると下書きが残り、再開できる", async ($, o
 
   await ui.press({ key: "submit" });
   expect(submitted.at(-1)).toContain("コメント: 書きかけを仕上げた");
+  await ui.unmount();
+});
+
+test("追加したコメントは diff の中のカードで編集できる", async ($, on) => {
+  const { submitted } = await startSession($, on);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+  await ui.pointer({ in: "diff-0", type: "down", x: 2, y: 3, button: "left" });
+  await ui.pointer({ in: "diff-0", type: "up", x: 2, y: 4, button: "left" });
+  await ui.input({ key: "comment", text: "最初の本文" });
+
+  const inlineEdit = (await ui.findAll({ type: "Button", text: "編集" })).find(
+    (one) => one.key?.startsWith("inline-edit:"),
+  );
+  expect(inlineEdit).toBeDefined();
+  await ui.press({ key: inlineEdit?.key ?? "" });
+  expect((await ui.find({ key: "edit" }))?.props.value).toBe("最初の本文");
+
+  await ui.input({ key: "edit", text: "  " });
+  expect(await ui.find({ key: "edit" })).toBeDefined();
+
+  await ui.input({ key: "edit", text: "書き直した本文" });
+  expect(await ui.find({ key: "edit" })).toBeUndefined();
+  expect(
+    await ui.find({ type: "Text", text: /^書き直した本文$/ }),
+  ).toBeDefined();
+
+  await ui.press({ key: "submit" });
+  const text = submitted.at(-1) ?? "";
+  expect(text).toContain("1. @app/a.rb:L2-L3");
+  expect(text).toContain("コメント: 書き直した本文");
+  expect(text).not.toContain("最初の本文");
+  await ui.unmount();
+});
+
+test("一覧の編集ボタンは、diff の中のカードではなく一覧の行の下に編集欄を開く", async ($, on) => {
+  await startSession($, on);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+  await ui.pointer({ in: "diff-0", type: "down", x: 2, y: 3, button: "left" });
+  await ui.pointer({ in: "diff-0", type: "up", x: 2, y: 4, button: "left" });
+  await ui.input({ key: "comment", text: "最初の本文" });
+
+  const listEdit = (await ui.findAll({ type: "Button", text: "編集" })).find(
+    (one) => one.key?.startsWith("edit:"),
+  );
+  await ui.press({ key: listEdit?.key ?? "" });
+  expect((await ui.find({ key: "edit" }))?.props.value).toBe("最初の本文");
+  expect(await ui.find({ type: "Text", text: /^最初の本文$/ })).toBeDefined();
+  await ui.unmount();
+});
+
+test("diff から行が消えたコメントは一覧の行の下で編集し、取り消せる", async ($, on) => {
+  let diff = DIFF;
+  const { submitted } = await startSession($, on, () => diff);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+  await ui.pointer({ in: "diff-0", type: "down", x: 2, y: 3, button: "left" });
+  await ui.pointer({ in: "diff-0", type: "up", x: 2, y: 4, button: "left" });
+  await ui.input({ key: "comment", text: "最初の本文" });
+
+  diff = DIFF.replace("@@ -1,2 +1,3 @@", "@@ -1,2 +1,1 @@")
+    .replace("+  2\n", "")
+    .replace("+  3\n", "");
+  await ui.press({ key: "refresh" });
+  expect(
+    (await ui.findAll({ type: "Button", text: "編集" })).some((one) =>
+      one.key?.startsWith("inline-edit:"),
+    ),
+  ).toBe(false);
+
+  const listEdit = (await ui.findAll({ type: "Button", text: "編集" })).find(
+    (one) => one.key?.startsWith("edit:"),
+  );
+  await ui.press({ key: listEdit?.key ?? "" });
+  expect((await ui.find({ key: "edit" }))?.props.value).toBe("最初の本文");
+  await ui.press({ key: "edit-cancel" });
+  expect(await ui.find({ key: "edit" })).toBeUndefined();
+
+  await ui.press({ key: listEdit?.key ?? "" });
+  await ui.input({ key: "edit", text: "一覧で直した本文" });
+  expect(await ui.find({ key: "edit" })).toBeUndefined();
+
+  await ui.press({ key: "submit" });
+  expect(submitted.at(-1)).toContain("コメント: 一覧で直した本文");
   await ui.unmount();
 });
 
@@ -240,8 +331,8 @@ test("コメントは対象行の直下に出て、キー操作はそれをま�
   await ui.press({ key: "submit" });
 
   const text = submitted.at(-1) ?? "";
-  expect(text).toContain("1. app/a.rb:L1\n");
-  expect(text).toContain("2. app/a.rb:L1-L3 (削除行 L2 を含む)");
+  expect(text).toContain("1. @app/a.rb:L1\n");
+  expect(text).toContain("2. @app/a.rb:L1-L3 (削除行 L2 を含む)");
   await ui.unmount();
 });
 
@@ -275,7 +366,7 @@ test("長い行は折り返し、続きの行を押してもその行が選ば�
   await ui.input({ key: "comment", text: "長い" });
   await ui.press({ key: "submit" });
 
-  expect(submitted.at(-1)).toContain("1. app/a.rb:L1\n");
+  expect(submitted.at(-1)).toContain("1. @app/a.rb:L1\n");
   await ui.unmount();
 });
 
@@ -302,7 +393,7 @@ test("hunk の見出し行は選べず、範囲にも入らない", async ($, on
   await ui.press({ key: "submit" });
 
   const text = submitted.at(-1) ?? "";
-  expect(text).toContain("1. app/a.rb:L1 (削除行 L2 を含む)");
+  expect(text).toContain("1. @app/a.rb:L1 (削除行 L2 を含む)");
   expect(text).not.toContain("@@");
   await ui.unmount();
 });
@@ -325,7 +416,7 @@ test("worktree・比較基準・ファイルの一覧は行を押したときだ
   await ui.press({ key: "base:branch" });
   expect(await ui.find({ key: "base:branch" })).toBeUndefined();
   expect(
-    await ui.find({ type: "Text", text: /^merge-base からの全体/ })
+    await ui.find({ type: "Text", text: /^merge-base からの全体/ }),
   ).toBeDefined();
 
   expect(await ui.find({ key: "file:app/a.rb" })).toBeUndefined();
@@ -412,7 +503,7 @@ test("PR の未解決コメントを対象行に出し、選んだものを Clau
   await ui.press({ key: "pick-worktree" });
   await ui.press({ key: "worktree:/repo-wt/feat" });
   expect(
-    await ui.find({ type: "Text", text: /^#7 未解決 2 件$/ })
+    await ui.find({ type: "Text", text: /^#7 未解決 2 件$/ }),
   ).toBeDefined();
   expect(await ui.find({ type: "Text", text: /^ alice $/ })).toBeDefined();
   expect(await ui.find({ type: "Text", text: /解決済み/ })).toBeUndefined();
@@ -428,31 +519,31 @@ test("PR の未解決コメントを対象行に出し、選んだものを Clau
   await ui.press({ key: "pick-pr" });
   await ui.press({ key: "thread:T1" });
   expect((await ui.find({ key: "thread:T3" }))?.text).toContain(
-    "PR 上で outdated"
+    "PR 上で outdated",
   );
   await ui.press({ key: "thread:T3" });
   expect((await ui.find({ key: "include-all-threads" }))?.text).toBe(
-    "すべて外す"
+    "すべて外す",
   );
   await ui.press({ key: "include-all-threads" });
   expect(
-    await ui.find({ type: "Text", text: /Claude に送る 0 件/ })
+    await ui.find({ type: "Text", text: /Claude に送る 0 件/ }),
   ).toBeDefined();
   await ui.press({ key: "include-all-threads" });
   await ui.press({ key: "pick-pr" });
   expect(
-    await ui.find({ type: "Text", text: /Claude に送る 2 件/ })
+    await ui.find({ type: "Text", text: /Claude に送る 2 件/ }),
   ).toBeDefined();
 
   await ui.press({ key: "submit" });
   const text = submitted.at(-1) ?? "";
   expect(text).toContain("GitHub PR #7 (https://github.com/o/r/pull/7)");
   expect(text).toContain(
-    "1. app/a.rb:L2\n   コード:   2\n   @alice:\n     ここ直して\n     理由はこれ"
+    "1. @app/a.rb:L2\n   コード:   2\n   @alice:\n     ここ直して\n     理由はこれ",
   );
-  expect(text).toContain("2. app/b.rb:L5\n   @carol:\n     古い指摘");
+  expect(text).toContain("2. @app/b.rb:L5\n   @carol:\n     古い指摘");
   expect(
-    await ui.find({ type: "Text", text: /Claude に送る 0 件/ })
+    await ui.find({ type: "Text", text: /Claude に送る 0 件/ }),
   ).toBeDefined();
   await ui.unmount();
 
@@ -477,7 +568,7 @@ test("Client の無い vscode では行を押してコメントできる", async
   await ui.input({ key: "comment", text: "定数にする" });
   await ui.press({ key: "submit" });
 
-  expect(submitted.at(-1)).toContain("1. app/a.rb:L2\n");
+  expect(submitted.at(-1)).toContain("1. @app/a.rb:L2\n");
   await ui.unmount();
 });
 

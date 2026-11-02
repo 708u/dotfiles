@@ -3,6 +3,7 @@ import type { EngineInterface, Register, RenderChildren } from "claude-code";
 
 import type {
   CommentDraft,
+  CommentEdit,
   DiffBase,
   DiffFile,
   DiffLine,
@@ -46,17 +47,17 @@ const worktrees = atom(
   [],
   {
     shape: "worktrees-1",
-  }
+  },
 );
 const target = atom({ plugin: "review-diff", key: "target" } as const, null);
 const openPicker = atom(
   { plugin: "review-diff", key: "openPicker" } as const,
-  null
+  null,
 );
 const base = atom({ plugin: "review-diff", key: "base" } as const, "head");
 const baseLabel = atom(
   { plugin: "review-diff", key: "baseLabel" } as const,
-  ""
+  "",
 );
 const files = atom({ plugin: "review-diff", key: "files" } as const, [], {
   shape: "files-1",
@@ -65,11 +66,11 @@ const file = atom({ plugin: "review-diff", key: "file" } as const, null);
 const selection = atom(
   { plugin: "review-diff", key: "selection" } as const,
   null,
-  { shape: "selection-2" }
+  { shape: "selection-2" },
 );
 const lineLimit = atom(
   { plugin: "review-diff", key: "lineLimit" } as const,
-  LINE_PAGE
+  LINE_PAGE,
 );
 const comments = atom({ plugin: "review-diff", key: "comments" } as const, [], {
   shape: "comments-2",
@@ -83,20 +84,23 @@ const pr = atom({ plugin: "review-diff", key: "pr" } as const, null, {
 const prThreads = atom(
   { plugin: "review-diff", key: "prThreads" } as const,
   [],
-  { shape: "pr-threads-1" }
+  { shape: "pr-threads-1" },
 );
 const includedThreads = atom(
   { plugin: "review-diff", key: "includedThreads" } as const,
-  []
+  [],
 );
 const collapsedComments = atom(
   { plugin: "review-diff", key: "collapsedComments" } as const,
-  []
+  [],
 );
+const editing = atom({ plugin: "review-diff", key: "editing" } as const, null, {
+  shape: "editing-1",
+});
 
 async function toggleCollapsed($: EngineInterface, id: string) {
   await update($, collapsedComments, (list) =>
-    list.includes(id) ? list.filter((one) => one !== id) : [...list, id]
+    list.includes(id) ? list.filter((one) => one !== id) : [...list, id],
   );
 }
 const status = atom({ plugin: "review-diff", key: "status" } as const, null);
@@ -128,7 +132,7 @@ async function refreshPr($: EngineInterface): Promise<void> {
 
 async function toggleThread($: EngineInterface, id: string) {
   await update($, includedThreads, (list) =>
-    list.includes(id) ? list.filter((one) => one !== id) : [...list, id]
+    list.includes(id) ? list.filter((one) => one !== id) : [...list, id],
   );
 }
 
@@ -136,7 +140,7 @@ async function toggleThread($: EngineInterface, id: string) {
 async function toggleAllThreads($: EngineInterface) {
   const ids = (await read($, prThreads)).map((thread) => thread.id);
   await update($, includedThreads, (list) =>
-    ids.every((id) => list.includes(id)) ? [] : ids
+    ids.every((id) => list.includes(id)) ? [] : ids,
   );
 }
 
@@ -176,7 +180,7 @@ async function refreshDiff($: EngineInterface): Promise<void> {
   await update($, files, () => loaded.files);
   await update($, baseLabel, () => loaded.baseLabel);
   await update($, status, () =>
-    loaded.files.length === 0 ? "差分はありません" : null
+    loaded.files.length === 0 ? "差分はありません" : null,
   );
   const selected = await read($, file);
   if (!loaded.files.some((one) => one.path === selected)) {
@@ -188,12 +192,14 @@ async function selectFile($: EngineInterface, path: string | null) {
   await flushTyping($);
   await update($, file, () => path);
   await update($, selection, () => null);
+  await update($, editing, () => null);
   await update($, lineLimit, () => LINE_PAGE);
 }
 
 async function setTarget($: EngineInterface, path: string) {
   await update($, target, () => path);
   await update($, includedThreads, () => []);
+  await update($, editing, () => null);
   await selectFile($, null);
   await Promise.all([refreshDiff($), refreshPr($)]);
 }
@@ -236,10 +242,10 @@ function rangeWhere(lines: readonly DiffLine[]): string {
   if (lines.length === 1 && lines[0] !== undefined) return whereOf(lines[0]);
 
   const added = lines.flatMap((line) =>
-    line.kind === "del" || line.newNo === undefined ? [] : [line.newNo]
+    line.kind === "del" || line.newNo === undefined ? [] : [line.newNo],
   );
   const removed = lines.flatMap((line) =>
-    line.kind === "del" && line.oldNo !== undefined ? [line.oldNo] : []
+    line.kind === "del" && line.oldNo !== undefined ? [line.oldNo] : [],
   );
   if (added.length === 0 && removed.length === 0) return "hunk";
   if (added.length === 0) return `${spanOf(removed)} (削除行)`;
@@ -256,7 +262,7 @@ async function addComment(
   $: EngineInterface,
   diffFile: DiffFile,
   range: LineRange,
-  body: string
+  body: string,
 ) {
   const text = body.trim();
   if (text === "") return;
@@ -290,6 +296,62 @@ async function addComment(
 
 async function removeComment($: EngineInterface, id: string) {
   await update($, comments, (list) => list.filter((one) => one.id !== id));
+  await update($, editing, (now) => (now?.id === id ? null : now));
+}
+
+/**
+ * 押したボタンの位置にコメントの編集欄を開き、そこへフォーカスを移す
+ *
+ * ボタンは pane の中で押されるので pane はすでにキーボードを持っており、開き直さずに入力欄へ移る。
+ *
+ * @param $ engine interface
+ * @param edit 編集するコメントと、編集欄を開く位置
+ */
+async function startEditing($: EngineInterface, edit: CommentEdit) {
+  await closeComposer($);
+  await update($, editing, () => edit);
+  void focusKey($, "edit");
+}
+
+/**
+ * 編集欄を閉じる
+ *
+ * フォーカスしている入力欄が消えるとフォーカスが pane の別の要素へ移り、表示位置もそこへ動く。
+ * そのため先に編集を始めたボタンへフォーカスを戻してから閉じる。
+ *
+ * @param $ engine interface
+ */
+async function finishEditing($: EngineInterface) {
+  const edit = await read($, editing);
+  if (edit === null) return;
+
+  await focusKey(
+    $,
+    edit.place === "card" ? `inline-edit:${edit.id}` : `edit:${edit.id}`,
+  );
+  await update($, editing, () => null);
+}
+
+async function focusKey($: EngineInterface, key: string) {
+  const refuse = (reason: string) =>
+    $.ui.log(`review-diff: focus refused: ${reason}`, { to: "debug" });
+  try {
+    const result = await $.ui.focus({ requestId: PANE, key });
+    if (result.deny !== undefined) refuse(result.deny);
+  } catch (error) {
+    refuse(String(error));
+  }
+}
+
+// 空にして確定したときは本文を変えず、入力欄を残す
+async function editComment($: EngineInterface, id: string, body: string) {
+  const text = body.trim();
+  if (text === "") return;
+
+  await update($, comments, (list) =>
+    list.map((one) => (one.id === id ? { ...one, body: text } : one)),
+  );
+  await finishEditing($);
 }
 
 type DraftKey = Pick<CommentDraft, "worktree" | "file" | "where">;
@@ -316,7 +378,7 @@ async function saveDraft($: EngineInterface, draft: CommentDraft) {
 
 async function removeDraft($: EngineInterface, key: DraftKey) {
   await update($, drafts, (list) =>
-    list.filter((one) => !isSameDraft(one, key))
+    list.filter((one) => !isSameDraft(one, key)),
   );
 }
 
@@ -360,6 +422,7 @@ function focusComposer($: EngineInterface, attempt = 0) {
 }
 
 async function openComposer($: EngineInterface, caret: LineCaret) {
+  await update($, editing, () => null);
   await update($, selection, () => ({ ...caret, isComposing: true }));
   focusComposer($);
 }
@@ -390,7 +453,7 @@ function composePrompt(
   prInfo: PrInfo | null,
   worktree: Worktree | undefined,
   path: string,
-  label: string
+  label: string,
 ): string {
   const head = [
     "diff へのレビューコメントです。各コメントに対応してください。",
@@ -400,7 +463,7 @@ function composePrompt(
     "",
   ];
   const body = list.flatMap((one, i) => [
-    `${i + 1}. ${one.file}:${one.where}`,
+    `${i + 1}. @${one.file}:${one.where}`,
     "   コード:",
     ...one.code.split("\n").map((line) => `     ${line}`),
     `   コメント: ${one.body}`,
@@ -412,7 +475,7 @@ function composePrompt(
           ...(list.length > 0 ? [""] : []),
           `GitHub PR #${prInfo.number} (${prInfo.url}) の未解決のレビューコメント:`,
           ...threads.flatMap((thread, i) => [
-            `${list.length + i + 1}. ${thread.path}:${threadWhere(thread)}`,
+            `${list.length + i + 1}. @${thread.path}:${threadWhere(thread)}`,
             ...(thread.anchor === "" ? [] : [`   コード: ${thread.anchor}`]),
             ...thread.comments.flatMap((comment) => [
               `   @${comment.author}:`,
@@ -441,7 +504,7 @@ async function submitComments($: EngineInterface) {
   const mine = all.filter((one) => one.worktree === path);
   const included = await read($, includedThreads);
   const threads = (await read($, prThreads)).filter((thread) =>
-    included.includes(thread.id)
+    included.includes(thread.id),
   );
   if (mine.length === 0 && threads.length === 0) {
     $.ui.toast("Claude に送るコメントがありません");
@@ -455,12 +518,13 @@ async function submitComments($: EngineInterface) {
     await read($, pr),
     worktree,
     path,
-    await read($, baseLabel)
+    await read($, baseLabel),
   );
   await update($, comments, (list) =>
-    list.filter((one) => one.worktree !== path)
+    list.filter((one) => one.worktree !== path),
   );
   await update($, includedThreads, () => []);
+  await update($, editing, () => null);
   void $.prompt.submit({ text, asUser: true }).catch(async (error) => {
     await update($, comments, (list) => [...mine, ...list]);
     await update($, includedThreads, () => included);
@@ -483,12 +547,12 @@ let paneColumns: number | undefined;
 async function openPane(
   $: EngineInterface,
   terminalColumns?: number,
-  hasFocus = true
+  hasFocus = true,
 ) {
   if (terminalColumns !== undefined) {
     paneColumns = Math.max(
       MIN_DOCK_COLUMNS,
-      Math.floor(terminalColumns * DOCK_SHARE)
+      Math.floor(terminalColumns * DOCK_SHARE),
     );
   }
 
@@ -530,7 +594,7 @@ function isViewMessage(data: unknown): data is DiffViewMessage {
  */
 function placeThread(
   thread: PrThread,
-  diffFiles: readonly DiffFile[]
+  diffFiles: readonly DiffFile[],
 ): { file: string; index: number } | null {
   if (thread.line === null || thread.isOutdated) return null;
 
@@ -542,7 +606,7 @@ function placeThread(
       ? line.kind === "del" && line.oldNo === thread.line
       : line.kind !== "del" &&
         line.kind !== "hunk" &&
-        line.newNo === thread.line
+        line.newNo === thread.line,
   );
   const line = target.lines[index];
   if (line === undefined) return null;
@@ -558,7 +622,7 @@ function plainLines(text: string): string[] {
   return text
     .split("\n")
     .map((line) =>
-      line.replace(/\t/g, "  ").replace(/[\u0000-\u001f\u007f]/g, "")
+      line.replace(/\t/g, "  ").replace(/[\u0000-\u001f\u007f]/g, ""),
     );
 }
 
@@ -612,7 +676,7 @@ const PICKER_TITLES: Record<Picker, string> = {
  */
 function rowsOf(
   lines: readonly DiffLine[],
-  marked: ReadonlySet<string>
+  marked: ReadonlySet<string>,
 ): DiffRow[] {
   return lines.map((line) => {
     const mark = marked.has(whereOf(line)) ? "*" : " ";
@@ -620,7 +684,7 @@ function rowsOf(
       line.kind === "hunk"
         ? `${mark} `
         : `${mark}${String(line.newNo ?? line.oldNo ?? "").padStart(
-            5
+            5,
           )} ${signOf(line)} `;
 
     return {
@@ -669,7 +733,7 @@ export const register: Register = (on) => {
         (one) =>
           one.branch === query ||
           one.path === query ||
-          one.path.endsWith(`/${query}`)
+          one.path.endsWith(`/${query}`),
       );
       if (found === undefined) {
         return { text: `worktree が見つかりません: ${query}` };
@@ -740,6 +804,11 @@ export const register: Register = (on) => {
       return { value: undefined };
     }
 
+    if ((await read($, editing)) !== null) {
+      await finishEditing($);
+      return { value: undefined };
+    }
+
     const sel = await read($, selection);
     await closeComposer($);
     if (sel === null || !sel.isComposing) return next(e);
@@ -780,6 +849,7 @@ export const register: Register = (on) => {
     const threads = await read($, prThreads);
     const included = await read($, includedThreads);
     const collapsed = await read($, collapsedComments);
+    const edit = await read($, editing);
 
     // 端末の Select はフォーカス中の矢印キーでしか選べないため、行全体を押せる Button にして一覧を開閉する。
     // 一覧は項目の数だけ縦に伸びるので、変更するときだけ開く
@@ -820,13 +890,13 @@ export const register: Register = (on) => {
     const limit = await read($, lineLimit);
     const message = await read($, status);
     const mine = (await read($, comments)).filter(
-      (one) => one.worktree === path
+      (one) => one.worktree === path,
     );
     const current = allFiles.find((one) => one.path === selectedPath);
     const marked = new Set(
       mine
         .filter((one) => one.file === selectedPath)
-        .flatMap((one) => one.marks)
+        .flatMap((one) => one.marks),
     );
     const width = Math.max(20, e.props.bodyColumns);
     const visible = current?.lines.slice(0, limit) ?? [];
@@ -847,7 +917,7 @@ export const register: Register = (on) => {
     const selectedWhere =
       selectedLines.length > 0 ? rangeWhere(selectedLines) : "";
     const myDrafts = (await read($, drafts)).filter(
-      (one) => one.worktree === path
+      (one) => one.worktree === path,
     );
     const draft =
       current === undefined
@@ -857,7 +927,7 @@ export const register: Register = (on) => {
               worktree: one.worktree,
               file: current.path,
               where: selectedWhere,
-            })
+            }),
           );
 
     const commentForm = current !== undefined &&
@@ -916,8 +986,8 @@ export const register: Register = (on) => {
                 row.kind === "add"
                   ? "success"
                   : row.kind === "del"
-                  ? "error"
-                  : undefined
+                    ? "error"
+                    : undefined
               }
               backgroundColor={
                 range !== null &&
@@ -931,7 +1001,7 @@ export const register: Register = (on) => {
               {row.text}
             </Text>
           </Button>
-        )
+        ),
       );
     const hunkRows = rows.flatMap((row, i) => (row.kind === "hunk" ? [i] : []));
 
@@ -944,6 +1014,9 @@ export const register: Register = (on) => {
       if (at === undefined) continue;
       inlineComments.set(at, [...(inlineComments.get(at) ?? []), one]);
     }
+    const inlineIds = new Set(
+      [...inlineComments.values()].flat().map((one) => one.id),
+    );
     const inlineThreads = new Map<number, PrThread[]>();
     for (const thread of threads) {
       const placed = placeThread(thread, allFiles);
@@ -976,12 +1049,12 @@ export const register: Register = (on) => {
         borderStyle: "round",
         borderColor: color,
         paddingX: 1,
-      } as const);
+      }) as const;
     // Button の中の Text は wrap="truncate-end" でも折り返されるので、たたんだときの本文は
     // 枠の内側の幅から見出しの部品の幅を引いた長さに切り詰めて 1 行に収める
     const CARD_INNER = 4;
     const FOLD_MARK = 2;
-    const DELETE_BUTTON = 9;
+    const ACTION_BUTTON = 9;
     const summaryRoom = (...used: string[]) =>
       width -
       CARD_INNER -
@@ -1007,7 +1080,7 @@ export const register: Register = (on) => {
                   ` ${plainLines(first?.body ?? "")[0] ?? ""}${
                     replies.length > 0 ? ` (返信 ${replies.length} 件)` : ""
                   }`,
-                  summaryRoom(` ${first?.author ?? ""} `)
+                  summaryRoom(` ${first?.author ?? ""} `),
                 )}
               </Text>
             )}
@@ -1025,8 +1098,27 @@ export const register: Register = (on) => {
       );
     };
 
+    const editForm = (one: ReviewComment) => (
+      <Box key="edit-form" flexDirection="column">
+        <Input
+          key="edit"
+          placeholder="Enter で保存、Esc で取り消す"
+          submitLabel="保存"
+          value={one.body}
+          autoFocus
+          onSubmit={(value) => editComment($, one.id, value)}
+        />
+        <Button
+          key="edit-cancel"
+          label="取り消す"
+          onPress={() => finishEditing($)}
+        />
+      </Box>
+    );
+
     const commentCard = (one: ReviewComment) => {
-      const isCollapsed = collapsed.includes(one.id);
+      const isEditing = edit?.id === one.id && edit.place === "card";
+      const isCollapsed = collapsed.includes(one.id) && !isEditing;
 
       return (
         <Box key={`inline:${one.id}`} {...cardFrame(OWN_COMMENT_COLOR)}>
@@ -1043,18 +1135,23 @@ export const register: Register = (on) => {
                 <Text dimColor>
                   {fitText(
                     ` ${plainLines(one.body)[0] ?? ""}`,
-                    summaryRoom(" 自分 ", ` ${one.where}`) - DELETE_BUTTON
+                    summaryRoom(" 自分 ", ` ${one.where}`) - 2 * ACTION_BUTTON,
                   )}
                 </Text>
               )}
             </Button>
+            <Button
+              key={`inline-edit:${one.id}`}
+              label="編集"
+              onPress={() => startEditing($, { id: one.id, place: "card" })}
+            />
             <Button
               key={`inline-delete:${one.id}`}
               label="削除"
               onPress={() => removeComment($, one.id)}
             />
           </Box>
-          {!isCollapsed && <Text>{one.body}</Text>}
+          {isEditing ? editForm(one) : !isCollapsed && <Text>{one.body}</Text>}
         </Box>
       );
     };
@@ -1234,7 +1331,7 @@ export const register: Register = (on) => {
           {pickerRow(
             "base",
             baseOptions.find((option) => option.value === currentBase)?.label ??
-              ""
+              "",
           )}
           {pickerRow("file", current?.path ?? "(なし)", [
             ...(current === undefined
@@ -1276,15 +1373,28 @@ export const register: Register = (on) => {
                 />
               </Box>
               {mine.map((one) => (
-                <Box key={`comment-row:${one.id}`} flexDirection="row" gap={1}>
-                  <Button
-                    key={`delete:${one.id}`}
-                    label="削除"
-                    onPress={() => removeComment($, one.id)}
-                  />
-                  <Text wrap="truncate-end">
-                    {one.file}:{one.where} {one.body}
-                  </Text>
+                <Box key={`comment-row:${one.id}`} flexDirection="column">
+                  <Box flexDirection="row" gap={1}>
+                    <Button
+                      key={`edit:${one.id}`}
+                      label="編集"
+                      onPress={() =>
+                        startEditing($, { id: one.id, place: "list" })
+                      }
+                    />
+                    <Button
+                      key={`delete:${one.id}`}
+                      label="削除"
+                      onPress={() => removeComment($, one.id)}
+                    />
+                    <Text wrap="truncate-end">
+                      {one.file}:{one.where} {one.body}
+                    </Text>
+                  </Box>
+                  {/* 一覧から開いたときと、diff の中にカードを出せないときは一覧の行の下で書き換える */}
+                  {edit?.id === one.id &&
+                    (edit.place === "list" || !inlineIds.has(one.id)) &&
+                    editForm(one)}
                 </Box>
               ))}
             </Box>
