@@ -8,6 +8,7 @@ import type {
   DiffFile,
   DiffLine,
   DiffRow,
+  DiffTone,
   DiffViewMessage,
   Picker,
   PrInfo,
@@ -15,13 +16,16 @@ import type {
   LineCaret,
   LineRange,
   ReviewComment,
+  TextSpan,
   Worktree,
 } from "../types";
 import { listWorktrees, loadDiff, worktreeOf } from "./diff";
 import { loadPr } from "./pr";
+import { lineChanges, piecesOf } from "./word-diff";
 import {
   OWN_COMMENT_COLOR,
   PR_COMMENT_COLOR,
+  DIFF_COLORS,
   SELECTED_BACKGROUND,
 } from "./theme";
 
@@ -664,6 +668,21 @@ const PICKER_TITLES: Record<Picker, string> = {
   pr: "PR:",
 };
 
+// theme の名前が light で始まるときだけ明るい背景向けの色にする。読めないときは暗い側にそろえる
+async function toneOf($: EngineInterface): Promise<DiffTone> {
+  try {
+    const theme = (await $.config.list()).find(
+      (row) => row.key === "theme",
+    )?.value;
+
+    return typeof theme === "string" && theme.startsWith("light")
+      ? "light"
+      : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
 /**
  * diff の行を、印・行番号・符号を前に付けた表示用の行にする
  *
@@ -678,7 +697,9 @@ function rowsOf(
   lines: readonly DiffLine[],
   marked: ReadonlySet<string>,
 ): DiffRow[] {
-  return lines.map((line) => {
+  const changes = lineChanges(lines, MAX_ROW_CHARS);
+
+  return lines.map((line, i) => {
     const mark = marked.has(whereOf(line)) ? "*" : " ";
     const head =
       line.kind === "hunk"
@@ -686,11 +707,18 @@ function rowsOf(
         : `${mark}${String(line.newNo ?? line.oldNo ?? "").padStart(
             5,
           )} ${signOf(line)} `;
+    const text = `${head}${line.text}`.slice(0, MAX_ROW_CHARS);
 
     return {
-      text: `${head}${line.text}`.slice(0, MAX_ROW_CHARS),
+      text,
       kind: line.kind,
       indent: head.length,
+      changes: (changes.get(i) ?? [])
+        .map(([start, end]): TextSpan => [
+          start + head.length,
+          Math.min(end + head.length, text.length),
+        ])
+        .filter(([start, end]) => start < end),
     };
   });
 }
@@ -899,6 +927,8 @@ export const register: Register = (on) => {
         .flatMap((one) => one.marks),
     );
     const width = Math.max(20, e.props.bodyColumns);
+    const tone = await toneOf($);
+    const colors = DIFF_COLORS[tone];
     const visible = current?.lines.slice(0, limit) ?? [];
     const rows = rowsOf(visible, marked);
     const range =
@@ -982,23 +1012,26 @@ export const register: Register = (on) => {
             }
           >
             <Text
-              color={
-                row.kind === "add"
-                  ? "success"
-                  : row.kind === "del"
-                    ? "error"
-                    : undefined
-              }
               backgroundColor={
                 range !== null &&
                 from + i >= range.start &&
                 from + i <= range.end
                   ? SELECTED_BACKGROUND
-                  : undefined
+                  : row.kind === "ctx"
+                    ? undefined
+                    : colors.line[row.kind]
               }
               wrap="wrap"
             >
-              {row.text}
+              {piecesOf(row.text, row.changes).map((piece) =>
+                piece.isChanged && (row.kind === "add" || row.kind === "del") ? (
+                  <Text backgroundColor={colors.change[row.kind]}>
+                    {piece.text}
+                  </Text>
+                ) : (
+                  piece.text
+                ),
+              )}
             </Text>
           </Button>
         ),
@@ -1183,6 +1216,7 @@ export const register: Register = (on) => {
               hunks: hunkRows,
               width,
               selection: caret,
+              tone,
             }}
           />,
         ];

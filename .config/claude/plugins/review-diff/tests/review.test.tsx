@@ -1,6 +1,8 @@
 import { expect, test } from "claude-code/testing";
 import type { Engine, TestBody } from "claude-code/testing";
 
+import { DIFF_COLORS } from "../hooks/theme";
+
 type On = Parameters<TestBody>[1];
 
 const PANE = {
@@ -636,4 +638,96 @@ test("twig add で増えた worktree にレビュー対象が移る", async ($, 
 
   expect(diffCwds.at(-1)).toBe("/repo-wt/new");
   expect(toasts.at(-1)).toContain("708u/new");
+});
+
+test("対になる削除行と追加行は、変わった部分だけ濃い背景で示す", async ($, on) => {
+  const changeDiff = [
+    "diff --git a/app/a.rb b/app/a.rb",
+    "--- a/app/a.rb",
+    "+++ b/app/a.rb",
+    "@@ -1,2 +1,2 @@",
+    '-label = "古い名前"',
+    "-def foo",
+    '+label = "新しい名前"',
+    "+completely different",
+    "",
+  ].join("\n");
+  await startSession($, on, changeDiff);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+
+  const texts = await ui.findAll({ type: "Text", in: "diff-0" });
+  const painted = (color: string) =>
+    texts
+      .filter((one) => one.props.backgroundColor === color)
+      .map((one) => one.text);
+  expect(painted(DIFF_COLORS.dark.change.del)).toEqual(["古"]);
+  expect(painted(DIFF_COLORS.dark.change.add)).toEqual(["新し"]);
+  // 似ていない行どうしは部分を強調せず、行の背景だけで示す
+  expect(painted(DIFF_COLORS.dark.line.del).some((text) => text.includes("def foo"))).toBe(
+    true,
+  );
+  expect(
+    painted(DIFF_COLORS.dark.line.add).some((text) => text.includes("completely different")),
+  ).toBe(true);
+  await ui.unmount();
+});
+
+test("表示できる長さの日本語の行でも、1 文字だけの変更を強調する", async ($, on) => {
+  const longLine = (middle: string) =>
+    `${"あ".repeat(115)}${middle}${"う".repeat(114)}`;
+  const longDiff = [
+    "diff --git a/doc.md b/doc.md",
+    "--- a/doc.md",
+    "+++ b/doc.md",
+    "@@ -1 +1 @@",
+    `-${longLine("い")}`,
+    `+${longLine("え")}`,
+    "",
+  ].join("\n");
+  await startSession($, on, longDiff);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+
+  const texts = await ui.findAll({ type: "Text", in: "diff-0" });
+  const painted = (color: string) =>
+    texts
+      .filter((one) => one.props.backgroundColor === color)
+      .map((one) => one.text);
+  expect(painted(DIFF_COLORS.dark.change.del)).toEqual(["い"]);
+  expect(painted(DIFF_COLORS.dark.change.add)).toEqual(["え"]);
+  await ui.unmount();
+});
+
+test("light の theme では明るい背景向けの色で塗る", async ($, on) => {
+  on("config.list", () => ({
+    value: [
+      {
+        key: "theme",
+        label: "Theme",
+        kind: "choice",
+        value: "light-ansi",
+        provider: { plugin: "engine", tier: "core" },
+        isLocked: false,
+      },
+    ],
+  }));
+  await startSession($, on);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+
+  const texts = await ui.findAll({ type: "Text", in: "diff-0" });
+  expect(
+    texts.some((one) => one.props.backgroundColor === DIFF_COLORS.light.line.add),
+  ).toBe(true);
+  expect(
+    texts.some((one) => one.props.backgroundColor === DIFF_COLORS.dark.line.add),
+  ).toBe(false);
+  await ui.unmount();
 });

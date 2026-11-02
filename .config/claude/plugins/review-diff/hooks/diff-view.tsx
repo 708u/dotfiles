@@ -6,13 +6,17 @@ import type {
   DiffViewProps,
   LineCaret,
 } from "../types";
-import { SELECTED_BACKGROUND } from "./theme";
+import { DIFF_COLORS, SELECTED_BACKGROUND } from "./theme";
+import { piecesOf } from "./word-diff";
+import type { Piece } from "./word-diff";
 
 type ViewState = LineCaret & { isDragging: boolean };
 
-type ScreenRow = { line: number; text: string; kind: DiffRow["kind"] };
+type WrappedRow = { pieces: Piece[]; used: number };
 
-const COLORS = { add: "success", del: "error", hunk: "suggestion" } as const;
+type ScreenRow = WrappedRow & { line: number; kind: DiffRow["kind"] };
+
+const HUNK_COLOR = "suggestion";
 
 // 端末では全角文字が 2 桁を占める
 function charWidth(char: string): number {
@@ -22,27 +26,39 @@ function charWidth(char: string): number {
 /**
  * 1 行を幅に収まる画面上の行に分ける。続きの行は indent 桁の字下げから始める
  *
- * @param text 分ける行
+ * 変わった部分の区切りは折り返した先の行にも引き継ぐ。
+ *
+ * @param row 分ける行
  * @param width 1 行の桁数
- * @param indent 続きの行の字下げ
- * @returns 画面上の行
+ * @returns 画面上の行ごとの部分と、使った桁数
  */
-function wrapRow(text: string, width: number, indent: number): string[] {
-  const pad = " ".repeat(Math.min(indent, Math.max(0, width - 10)));
-  const parts: string[] = [];
+function wrapRow(row: DiffRow, width: number): WrappedRow[] {
+  const pad = " ".repeat(Math.min(row.indent, Math.max(0, width - 10)));
+  const parts: WrappedRow[] = [];
+  let pieces: Piece[] = [];
   let current = "";
   let used = 0;
-  for (const char of text) {
-    const w = charWidth(char);
-    if (used + w > width && current.trim() !== "") {
-      parts.push(current);
-      current = pad;
-      used = pad.length;
+  const append = (text: string, isChanged: boolean) => {
+    const last = pieces.at(-1);
+    if (last !== undefined && last.isChanged === isChanged) last.text += text;
+    else pieces.push({ text, isChanged });
+  };
+  for (const piece of piecesOf(row.text, row.changes)) {
+    for (const char of piece.text) {
+      const w = charWidth(char);
+      if (used + w > width && current.trim() !== "") {
+        parts.push({ pieces, used });
+        pieces = [];
+        current = pad;
+        used = pad.length;
+        if (pad !== "") append(pad, false);
+      }
+      append(char, piece.isChanged);
+      current += char;
+      used += w;
     }
-    current += char;
-    used += w;
   }
-  parts.push(current);
+  parts.push({ pieces, used });
 
   return parts;
 }
@@ -91,14 +107,14 @@ const DiffView: ClientModule<DiffViewProps, ViewState> = (props, surface) => {
   // 領域の幅は最初の配置まで 0 なので、それまでは pane の幅で折り返す
   const width = Math.max(
     20,
-    surface.columns > 0 ? surface.columns : props.width
+    surface.columns > 0 ? surface.columns : props.width,
   );
   const screen: ScreenRow[] = props.rows.flatMap((row, i) =>
-    wrapRow(row.text, width, row.indent).map((text) => ({
+    wrapRow(row, width).map((wrapped) => ({
+      ...wrapped,
       line: first + i,
-      text,
       kind: row.kind,
-    }))
+    })),
   );
 
   surface.onPointer((event) => {
@@ -161,21 +177,40 @@ const DiffView: ClientModule<DiffViewProps, ViewState> = (props, surface) => {
   const low = shown ? Math.min(shown.anchor, shown.head) : -1;
   const high = shown ? Math.max(shown.anchor, shown.head) : -1;
 
+  const colors = DIFF_COLORS[props.tone];
+
   return (
     <Box flexDirection="column">
-      {screen.map((row) => (
-        <Text
-          color={row.kind === "ctx" ? undefined : COLORS[row.kind]}
-          backgroundColor={
-            row.kind !== "hunk" && row.line >= low && row.line <= high
-              ? SELECTED_BACKGROUND
-              : undefined
-          }
-          wrap="truncate-end"
-        >
-          {row.text}
-        </Text>
-      ))}
+      {screen.map((row) => {
+        const background =
+          row.kind !== "hunk" && row.line >= low && row.line <= high
+            ? SELECTED_BACKGROUND
+            : row.kind === "add" || row.kind === "del"
+              ? colors.line[row.kind]
+              : undefined;
+
+        // 背景を行の右端まで塗るため、残りの桁を空白で埋める
+        return (
+          <Text
+            color={row.kind === "hunk" ? HUNK_COLOR : undefined}
+            backgroundColor={background}
+            wrap="truncate-end"
+          >
+            {row.pieces.map((piece) =>
+              piece.isChanged && (row.kind === "add" || row.kind === "del") ? (
+                <Text backgroundColor={colors.change[row.kind]}>
+                  {piece.text}
+                </Text>
+              ) : (
+                piece.text
+              ),
+            )}
+            {background === undefined
+              ? ""
+              : " ".repeat(Math.max(0, width - row.used))}
+          </Text>
+        );
+      })}
     </Box>
   );
 };

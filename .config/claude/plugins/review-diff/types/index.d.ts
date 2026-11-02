@@ -58,7 +58,17 @@ export type LineCaret = { anchor: number; head: number };
 
 export type LineSelection = LineCaret & { isComposing: boolean };
 
-export type DiffRow = { text: string; kind: DiffLine["kind"]; indent: number };
+// Client の props の大きさに上限があるため、範囲は短く書ける組で渡す
+export type TextSpan = [start: number, end: number];
+
+export type DiffRow = {
+  text: string;
+  kind: DiffLine["kind"];
+  indent: number;
+  changes: TextSpan[];
+};
+
+export type DiffTone = "dark" | "light";
 
 export type DiffViewProps = {
   rows: DiffRow[];
@@ -67,6 +77,7 @@ export type DiffViewProps = {
   hunks: number[];
   width: number;
   selection: LineCaret | null;
+  tone: DiffTone;
 };
 
 export type DiffViewMessage = { type: "select" | "compose" } & LineCaret;
