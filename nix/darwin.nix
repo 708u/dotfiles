@@ -24,17 +24,19 @@
   security.pam.services.sudo_local.touchIdAuth = true;
 
   system.activationScripts.postActivation.text = ''
-    # バッテリー: macOS 標準 (スリープ有効)
-    sudo pmset -b sleep 1
+    # バッテリー: ディスプレイスリープ後にシステムもスリープ
+    sudo pmset -b displaysleep 15
+    sudo pmset -b sleep 30
     sudo pmset -b standby 1
     sudo pmset -b powernap 1
     sudo pmset -b networkoversleep 0
 
-    # AC: サーバー運用 (スリープ無効, ネットワーク維持)
+    # AC: ディスプレイのみスリープし、画面を消している間も処理を続ける
+    sudo pmset -c displaysleep 15
     sudo pmset -c sleep 0
-    sudo pmset -c standby 0
-    sudo pmset -c powernap 1
-    sudo pmset -c networkoversleep 1
+    sudo pmset -c standby 1
+    sudo pmset -c powernap 0
+    sudo pmset -c networkoversleep 0
   '';
 
 }
