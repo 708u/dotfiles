@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   system.keyboard = {
     enableKeyMapping = true;
@@ -60,6 +60,9 @@
     screencapture.location = "~/Documents/screenshots";
     screencapture.disable-shadow = true;
 
+    # メニューバー音量アイコン
+    controlcenter.Sound = true;
+
     # メニューバー時計
     menuExtraClock.Show24Hour = true;
     menuExtraClock.ShowSeconds = true;
@@ -71,6 +74,10 @@
 
     # nix-darwin に専用オプションがない設定
     CustomUserPreferences = {
+      # メニューバー VPN (ByHost ドメイン、18=表示/24=非表示)
+      "~${config.system.primaryUser}/Library/Preferences/ByHost/com.apple.controlcenter" = {
+        VPN = 18;
+      };
       # Spotlight 無効化 (Raycast で代替)
       "com.apple.Spotlight" = {
         "SuppressSearchFeature" = true;
