@@ -470,7 +470,7 @@ function composePrompt(
     `${i + 1}. @${one.file}:${one.where}`,
     "   コード:",
     ...one.code.split("\n").map((line) => `     ${line}`),
-    `   コメント: ${one.body}`,
+    `   コメント: ${one.body.split("\n").join("\n     ")}`,
   ]);
   const prPart =
     threads.length === 0 || prInfo === null
@@ -1184,7 +1184,8 @@ export const register: Register = (on) => {
               onPress={() => removeComment($, one.id)}
             />
           </Box>
-          {isEditing ? editForm(one) : !isCollapsed && <Text>{one.body}</Text>}
+          {isEditing ? editForm(one) : !isCollapsed &&
+            plainLines(one.body).map((line) => <Text>{line}</Text>)}
         </Box>
       );
     };
@@ -1422,7 +1423,7 @@ export const register: Register = (on) => {
                       onPress={() => removeComment($, one.id)}
                     />
                     <Text wrap="truncate-end">
-                      {one.file}:{one.where} {one.body}
+                      {one.file}:{one.where} {plainLines(one.body).join(" ")}
                     </Text>
                   </Box>
                   {/* 一覧から開いたときと、diff の中にカードを出せないときは一覧の行の下で書き換える */}
@@ -1453,7 +1454,7 @@ export const register: Register = (on) => {
                       onPress={() => removeDraft($, one)}
                     />
                     <Text dimColor wrap="truncate-end">
-                      {one.file}:{one.where} {one.body}
+                      {one.file}:{one.where} {plainLines(one.body).join(" ")}
                     </Text>
                   </Box>
                 ))}

@@ -731,3 +731,24 @@ test("light の theme では明るい背景向けの色で塗る", async ($, on)
   ).toBe(false);
   await ui.unmount();
 });
+
+test("改行を含むコメントは行ごとに表示し、送信文の字下げもそろえる", async ($, on) => {
+  const { submitted } = await startSession($, on);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+
+  await ui.press({ key: "pick-worktree" });
+  await ui.press({ key: "worktree:/repo-wt/feat" });
+  await ui.pointer({ in: "diff-0", type: "down", x: 2, y: 3, button: "left" });
+  await ui.pointer({ in: "diff-0", type: "up", x: 2, y: 4, button: "left" });
+  await ui.input({ key: "comment", text: "一行目\n二行目" });
+
+  expect(await ui.find({ type: "Text", text: /^一行目$/ })).toBeDefined();
+  expect(await ui.find({ type: "Text", text: /^二行目$/ })).toBeDefined();
+  expect(
+    await ui.find({ type: "Text", text: /app\/a\.rb:L2-L3 一行目 二行目/ }),
+  ).toBeDefined();
+
+  await ui.press({ key: "submit" });
+  expect(submitted.at(-1)).toContain("   コメント: 一行目\n     二行目");
+  await ui.unmount();
+});
