@@ -25,8 +25,7 @@ in
     };
     # NOTE: .claude/settings.json は symlink 管理しない。Claude Code が
     # 一時ファイルの rename で書くため symlink がファイルごと消え、
-    # 次の activation が clobber 検知で中断する。dotfiles 側の
-    # .config/claude/settings.json は追跡用のコピーとして残す
+    # 次の activation が clobber 検知で中断する
     ".claude/statusline.sh" = {
       source = mkSymlink ".config/claude/statusline.sh";
     };
