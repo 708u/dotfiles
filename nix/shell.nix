@@ -72,6 +72,10 @@
     GOPATH = "$HOME/go";
     PNPM_HOME = "$HOME/Library/pnpm";
     CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
+    # Aikido Device Protection は node 向けにこの export を ~/.zshrc へ追記する設計だが、
+    # home-manager 管理の ~/.zshrc は /nix/store への symlink で書き込みを拒否されるため、
+    # 未設定のままだと node / npm が Aikido の MITM 証明書を検証できず TLS エラーになる
+    NODE_EXTRA_CA_CERTS = "/Library/Application Support/AikidoSecurity/EndpointProtection/run/endpoint-protection-node-combined-ca.pem";
   };
 
   home.sessionPath = [
