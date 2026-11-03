@@ -3,6 +3,10 @@
   programs.zsh = {
     enable = true;
 
+    profileExtra = ''
+      source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+    '';
+
     initContent = lib.mkMerge [
       (lib.mkBefore ''
         export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
