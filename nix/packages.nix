@@ -1,4 +1,4 @@
-{ pkgs, inputs, system, ... }:
+{ pkgs, ... }:
 {
   home.packages = with pkgs; [
     ansible
@@ -23,7 +23,6 @@
     fzf
     gh
     ghq
-    inputs.gws.packages.${system}.default
     git
     git-lfs
     gnugrep
