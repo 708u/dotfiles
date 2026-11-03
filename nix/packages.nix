@@ -5,6 +5,7 @@
     awscli2
     bat
     buf
+    cargo
     circleci-cli
     clang-tools
     colima
@@ -24,6 +25,7 @@
     ghq
     inputs.gws.packages.${system}.default
     git
+    git-lfs
     gnugrep
     gogcli
     goku
@@ -43,6 +45,7 @@
     procs
     protobuf
     ripgrep
+    rustc
     saml2aws
     shellcheck
     stripe-cli
