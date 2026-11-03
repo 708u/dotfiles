@@ -145,7 +145,7 @@
       "tokens": [{ "pos": "動詞", "pos_detail_1": "自立", "basic_form": "積み上げる" }]
     },
     {
-      "message": "\"〜が開ける\" は避ける語です。「選択肢が生まれる」「可能になる」に言い換えてください。",
+      "message": "\"〜が開ける\" は避ける語です。「可能になる」に言い換えてください。",
       "tokens": [
         { "pos": "助詞", "pos_detail_1": "格助詞", "surface_form": "が" },
         { "pos": "動詞", "pos_detail_1": "自立", "basic_form": "開ける" }
@@ -169,6 +169,177 @@
         { "pos": "動詞", "pos_detail_1": "自立", "basic_form": "触れる" },
         { "pos": "助動詞", "surface_form": "ない" }
       ]
+    },
+    {
+      "message": "\"可用性が入る\" は避ける語です。「可用性に依存する」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "可用性" },
+        { "surface_form": "が" },
+        { "basic_form": "入る" }
+      ]
+    },
+    {
+      "message": "\"コストは解決しない\" は避ける語です。「コストは解消されない」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "コスト" },
+        { "surface_form": "は" },
+        { "basic_form": "解決" },
+        { "basic_form": "する" },
+        { "basic_form": "ない" }
+      ]
+    },
+    {
+      "message": "\"API が見える\" は避ける語です。「参照できる」「公開される」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "API" },
+        { "pos_detail_1": "空白" },
+        { "surface_form": "が" },
+        { "basic_form": "見える" }
+      ]
+    },
+    {
+      "message": "\"APIが見える\" は避ける語です。「参照できる」「公開される」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "API" },
+        { "surface_form": "が" },
+        { "basic_form": "見える" }
+      ]
+    },
+    {
+      "message": "\"〜側で持つ\" は避ける語です。「〜側で用意する」「〜側で設定する」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "側" },
+        { "surface_form": "で" },
+        { "basic_form": "持つ" }
+      ]
+    },
+    {
+      "message": "\"別に持つ\" は避ける語です。「別に用意する」「別に設定する」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "別に" },
+        { "basic_form": "持つ" }
+      ]
+    },
+    {
+      "message": "\"同じ呼び方\" は避ける語です。呼び出しの意味なら「同じ呼び出し方」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "同じ" },
+        { "basic_form": "呼ぶ" },
+        { "basic_form": "方" }
+      ]
+    },
+    {
+      "message": "\"依存が並ぶ\" は避ける語です。「依存が存在する」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "依存" },
+        { "surface_form": "が" },
+        { "basic_form": "並ぶ" }
+      ]
+    },
+    {
+      "message": "\"API 面\" は避ける語です。「エンドポイント」「公開 API」「公開範囲」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "API" },
+        { "pos_detail_1": "空白" },
+        { "basic_form": "面" }
+      ]
+    },
+    {
+      "message": "\"API面\" は避ける語です。「エンドポイント」「公開 API」「公開範囲」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "API" },
+        { "basic_form": "面" }
+      ]
+    },
+    {
+      "message": "\"HTTP 面\" は避ける語です。「エンドポイント」「公開 API」「公開範囲」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "HTTP" },
+        { "pos_detail_1": "空白" },
+        { "basic_form": "面" }
+      ]
+    },
+    {
+      "message": "\"HTTP面\" は避ける語です。「エンドポイント」「公開 API」「公開範囲」に言い換えてください。",
+      "tokens": [
+        { "surface_form": "HTTP" },
+        { "basic_form": "面" }
+      ]
+    },
+    {
+      "message": "\"N 段の PR\" は避ける語です。「N 本の PR」「N 段階の PR」に言い換えてください。",
+      "tokens": [
+        { "pos_detail_1": "数" },
+        { "pos_detail_1": "空白" },
+        { "surface_form": "段" },
+        { "surface_form": "の" },
+        { "pos_detail_1": "空白" },
+        { "surface_form": "PR" }
+      ]
+    },
+    {
+      "message": "\"N段のPR\" は避ける語です。「N 本の PR」「N 段階の PR」に言い換えてください。",
+      "tokens": [
+        { "pos_detail_1": "数" },
+        { "surface_form": "段" },
+        { "surface_form": "の" },
+        { "surface_form": "PR" }
+      ]
+    },
+    {
+      "message": "\"N 段のPR\" は避ける語です。「N 本の PR」「N 段階の PR」に言い換えてください。",
+      "tokens": [
+        { "pos_detail_1": "数" },
+        { "pos_detail_1": "空白" },
+        { "surface_form": "段" },
+        { "surface_form": "の" },
+        { "surface_form": "PR" }
+      ]
+    },
+    {
+      "message": "\"N段の PR\" は避ける語です。「N 本の PR」「N 段階の PR」に言い換えてください。",
+      "tokens": [
+        { "pos_detail_1": "数" },
+        { "surface_form": "段" },
+        { "surface_form": "の" },
+        { "pos_detail_1": "空白" },
+        { "surface_form": "PR" }
+      ]
+    },
+    {
+      "message": "\"ダミー\" は避ける語です。「サンプル」、仮置きの意味なら「プレースホルダ」に言い換えてください。",
+      "tokens": [{ "basic_form": "ダミー" }]
+    },
+    {
+      "message": "\"slave\" は避ける語です。「replica」に言い換えてください。",
+      "tokens": [{ "surface_form": "slave" }]
+    },
+    {
+      "message": "\"スレーブ\" は避ける語です。「レプリカ」に言い換えてください。",
+      "tokens": [{ "basic_form": "スレーブ" }]
+    },
+    {
+      "message": "\"whitelist\" は避ける語です。「allowlist」に言い換えてください。",
+      "tokens": [{ "surface_form": "whitelist" }]
+    },
+    {
+      "message": "\"blacklist\" は避ける語です。「denylist」に言い換えてください。",
+      "tokens": [{ "surface_form": "blacklist" }]
+    },
+    {
+      "message": "\"ホワイトリスト\" は避ける語です。「許可リスト」「allowlist」に言い換えてください。",
+      "tokens": [
+        { "basic_form": "ホワイト" },
+        { "basic_form": "リスト" }
+      ]
+    },
+    {
+      "message": "\"ブラックリスト\" は避ける語です。「拒否リスト」「denylist」に言い換えてください。",
+      "tokens": [{ "basic_form": "ブラックリスト" }]
+    },
+    {
+      "message": "\"器\" は避ける語です。比喩を避け、指している内容 (例: 「画面の構成」)に言い換えてください。",
+      "tokens": [{ "basic_form": "器" }]
     }
   ]
 }
