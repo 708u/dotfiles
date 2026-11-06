@@ -110,6 +110,8 @@ GitHub の操作には gh CLI を使う。GitHub MCP は使わない。認証は
 
 `--body-file` でファイルから渡す。`--body` にヒアドキュメントを埋め込まない。
 
+PR を作成する前に、repository に PR template (`.github/pull_request_template.md` など) があるかを必ず確認する。ある場合は description をその template に沿って書く。見出しの名前と順序を変えず、各見出しのコメントで指示された内容を記入する。該当しない見出しも削除せず、該当しない旨を書く。
+
 編集するときは直前に `gh pr view <number> --json body -q '.body'` で最新版を取得し、他者 (ユーザー、レビュアー、bot) の追記を必ず引き継ぐ。確認なしの上書きは禁止。
 
 PR が存在するブランチへ push したら、description を push 後のブランチの差分に合わせて更新する。レビュー指摘への対応で push したときも同様に更新する。変更内容の節だけでなく、ファイルパス、QA の項目と結果、変更しなかったことの記述も見直す。
@@ -354,6 +356,22 @@ const maxTimeout = 30 * time.Second
 
 ```go
 const maxTimeout = 30 * time.Second
+```
+
+この規則は値の書き写しを禁じるもので、コメントが説明している対象を伏せる規則ではない。直下の行にある引数・オプション・条件を説明するときは、その識別子を名指しする。対象を書かないと、コメントがどのコードの理由なのか読み手が判断できず、該当のコードを誤って消されやすくなる。
+
+悪い例 (何についての理由か分からない):
+
+```go
+// 外部から任意に指定できるため、他ホストへは戻さない
+redirectBack(w, r, Options{AllowOtherHost: false})
+```
+
+良い例 (対象のオプションを名指しする):
+
+```go
+// 外部から任意に指定できるため、他ホストへは戻さないよう AllowOtherHost: false を明示する
+redirectBack(w, r, Options{AllowOtherHost: false})
 ```
 
 #### 投機的な将来予測を書かない
