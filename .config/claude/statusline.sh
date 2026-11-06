@@ -257,6 +257,22 @@ elif [[ "$cache_warm" == "false" ]]; then
   line1+=("${DIM}cache${RESET} ${RED}cold${RESET}")
 fi
 
+# herdr の sidebar で $model, $effort, $ctx として表示する。statusline は描画のたびに
+# 呼ばれるため、値が変わったときだけ background で送る
+if [[ -n "$HERDR_PANE_ID" ]] && command -v herdr >/dev/null; then
+  herdr_payload="${model}	${effort}	${used}%"
+  herdr_sent="${usage_cache_dir}/herdr-${HERDR_PANE_ID//[^A-Za-z0-9_-]/_}"
+  if [[ "$(cat "$herdr_sent" 2>/dev/null)" != "$herdr_payload" ]]; then
+    mkdir -p "$usage_cache_dir"
+    printf '%s' "$herdr_payload" >"$herdr_sent"
+    # pane ID を option より後ろに置くと herdr が option を解釈できない
+    herdr pane report-metadata "$HERDR_PANE_ID" --source claude-statusline \
+      --token "model=${model}" --token "effort=${effort}" --token "ctx=${used}%" \
+      </dev/null >/dev/null 2>&1 &
+    disown
+  fi
+fi
+
 # Output
 (IFS="|"; printf '%b\n' "${line1[*]}" | sed 's/|/ | /g')
 (IFS="|"; printf '%b\n' "${line2[*]}" | sed 's/|/ | /g')

@@ -174,10 +174,10 @@ prefix = ["ctrl+a", "cmd+j"]
 # sidebar_width = 26
 
 # Minimum sidebar width when expanded (columns)
-# sidebar_min_width = 18
+sidebar_min_width = 40
 
 # Maximum sidebar width when expanded (columns)
-# sidebar_max_width = 36
+sidebar_max_width = 60
 
 # Start with the sidebar collapsed. Changes take effect on the next launch.
 # sidebar_start_collapsed = false
@@ -284,13 +284,18 @@ prefix = ["ctrl+a", "cmd+j"]
 # Custom values reported through pane metadata use a $name token.
 # A token occurrence may be styled with { token = "workspace", fg = "#89b4fa", bold = true, dim = false }.
 # Omitted style fields preserve the contextual default.
-# [ui.sidebar.agents]
+[ui.sidebar.agents]
 # Blank rows between agent entries. Set to 1 to restore the previous spacing.
 # row_gap = 0
-# rows = [["state_icon", "machine", "workspace", "tab"], ["agent"]]
+rows = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
 # Optional canonical agent IDs replace the default rows for matching agents.
-# [ui.sidebar.agents.rows_by_agent]
-# claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+[ui.sidebar.agents.rows_by_agent]
+# $model, $effort, $ctx は Claude Code の statusline から送る
+claude = [
+  ["state_icon", "machine", "workspace", "tab"],
+  ["terminal_title_stripped"],
+  ["agent", "$model", { token = "$effort", dim = true }, "$ctx"],
+]
 
 # Expanded space rows. Built-ins are state_icon, state_text, workspace, branch, and git_status.
 # Custom values reported through workspace metadata use a $name token, for example $jj_status.
