@@ -1,7 +1,29 @@
-{ config, dotfilesDir, ... }:
+{ config, lib, pkgs, dotfilesDir, ... }:
 let
   mkSymlink = path:
     config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/${path}";
+
+  # flake の評価では git で追跡しているファイルだけが見えるため、
+  # 新しい skill は git add してから apply するまで配置されない
+  ownSkills = lib.filterAttrs (_: type: type == "directory")
+    (builtins.readDir ../.config/claude/skills);
+
+  # 本体を nix で入れているツールの skill は、本体と同じソースから配置して
+  # バージョンを揃える
+  externalSkills = {
+    herdr = "${pkgs.herdr.src}/skills/herdr";
+  };
+
+  # 外部の skill や、ツールが書き込む skill (claude.ai からの同期など) を
+  # リポジトリの外に置くため、~/.claude/skills はディレクトリごとリンクせず
+  # skill ごとにリンクする
+  skillFiles =
+    lib.mapAttrs' (name: _:
+      lib.nameValuePair ".claude/skills/${name}" {
+        source = mkSymlink ".config/claude/skills/${name}";
+      }) ownSkills
+    // lib.mapAttrs' (name: src:
+      lib.nameValuePair ".claude/skills/${name}" { source = src; }) externalSkills;
 in
 {
   xdg.configFile = {
@@ -40,9 +62,6 @@ in
     ".claude/commands" = {
       source = mkSymlink ".config/claude/commands";
     };
-    ".claude/skills" = {
-      source = mkSymlink ".config/claude/skills";
-    };
     ".claude/output-styles" = {
       source = mkSymlink ".config/claude/output-styles";
     };
@@ -55,5 +74,5 @@ in
     ".mutagen.yml" = {
       source = mkSymlink ".config/mutagen.yml";
     };
-};
+  } // skillFiles;
 }

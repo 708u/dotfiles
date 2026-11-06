@@ -72,6 +72,23 @@ list 型のオプション (`homebrew.brews` など) は共通の module と連�
 nix store 経由の二段階 symlink を作成する。
 リンク先は dotfiles リポジトリ内のファイル。
 
+### Claude Code の skill
+
+`~/.claude/skills` はディレクトリごとリンクせず、
+`symlinks.nix` が skill ごとに配置する。入手元ごとの管理方法:
+
+- **自作**: `.config/claude/skills/` に置く。
+  新しい skill は git add してから `make apply` するまで配置されない
+- **plugin として配布されているもの**: Claude Code の plugin で管理する
+- **nix で入れたツールに付属するもの**: `externalSkills` に
+  パッケージのソース内のパスを指定し、本体とバージョンを揃える
+- **GitHub で公開されている単体の skill**: flake input
+  (`flake = false`) で取得し、`externalSkills` に追加する。
+  home-manager に `inputs` を渡す必要がある
+
+claude.ai からの同期などツールが書き込む skill は
+`~/.claude/skills` に直接作られ、リポジトリには入らない。
+
 ### zsh 設定の構造
 
 `shell.nix` が `~/.zshrc` を生成。Zinit を初期化後、
