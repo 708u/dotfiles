@@ -9,7 +9,7 @@
   system.activationScripts.postActivation.text = ''
     sudo pmset -a sleep 0
     sudo pmset -a disablesleep 1
-    sudo pmset -a displaysleep 1
+    sudo pmset -a displaysleep 30
     sudo pmset -a powernap 0
     sudo pmset -a lowpowermode 1
   '';
