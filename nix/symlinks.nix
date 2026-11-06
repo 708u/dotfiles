@@ -17,6 +17,11 @@ in
     "zellij/config.kdl" = {
       source = mkSymlink ".config/zellij/config.kdl";
     };
+    # ~/.config/herdr には socket や log も置かれるため、ディレクトリではなく
+    # config.toml だけを symlink にする
+    "herdr/config.toml" = {
+      source = mkSymlink ".config/herdr/config.toml";
+    };
   };
 
   home.file = {
