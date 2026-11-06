@@ -1,5 +1,12 @@
-{ ... }:
+{ username, ... }:
 {
+  # google-japanese-ime は更新すると入力ソースの登録が外れ、ログインし直すまで
+  # 日本語を入力できなくなる。brew bundle は pin 済みの cask を更新しないため、
+  # bundle より前に pin して apply での更新を止める。更新は手動で行う
+  system.activationScripts.preActivation.text = ''
+    sudo --user=${username} --set-home /opt/homebrew/bin/brew pin --cask google-japanese-ime 2>/dev/null || true
+  '';
+
   homebrew = {
     enable = true;
     onActivation = {
