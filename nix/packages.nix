@@ -5,6 +5,7 @@
     awscli2
     bat
     buf
+    bun
     cargo
     circleci-cli
     clang-tools
