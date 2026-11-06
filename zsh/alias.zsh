@@ -65,7 +65,9 @@ ssh() {
 # SSH接続先で背景色を維持
 # precmd: プロンプト表示時に再適用
 # TRAPALRM: プロンプト待機中1秒ごとに再適用
-if [[ -n "$SSH_CONNECTION" ]]; then
+# SSH_CONNECTION は SSH 経由で起動したプロセスの子孫すべてに引き継がれるため、
+# sshd が割り当てた端末 (SSH_TTY) で動くシェルだけを対象にする
+if [[ -n "$SSH_TTY" && "$SSH_TTY" == "$TTY" ]]; then
   __reapply_ssh_bg() { printf '\033]11;%s\033\\' "$_SSH_HOME_BG" }
   precmd_functions+=(__reapply_ssh_bg)
   TMOUT=1
