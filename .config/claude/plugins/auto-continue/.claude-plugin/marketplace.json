@@ -1,0 +1,15 @@
+{
+  "name": "auto-continue",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "auto-continue",
+      "source": "./",
+      "description": "放置中の session の状態を判定し、外部の進行待ちや作業の途中なら続きを促す文言を投稿し、完了したら片付けを依頼する",
+      "version": "0.1.0"
+    }
+  ]
+}
