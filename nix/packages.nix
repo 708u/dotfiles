@@ -30,6 +30,7 @@
     goku
     graphviz
     grpcurl
+    herdr
     hyperfine
     # jp2a  # nixpkgs で broken
     jq

@@ -23,23 +23,35 @@
     let
       system = "aarch64-darwin";
       username = "708u";
-      hostname = "708uMacBookPro";
       dotfilesDir = "/Users/${username}/ghq/github.com/708u/dotfiles";
+      mkDarwin =
+        {
+          hostname,
+          extraModules ? [ ],
+        }:
+        nix-darwin.lib.darwinSystem {
+          inherit system;
+          modules = [
+            ./nix/darwin.nix
+            home-manager.darwinModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = { inherit dotfilesDir; };
+              home-manager.users.${username} = import ./nix/home.nix;
+            }
+          ]
+          ++ extraModules;
+          specialArgs = { inherit inputs username hostname; };
+        };
     in
     {
-      darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
-        inherit system;
-        modules = [
-          ./nix/darwin.nix
-          home-manager.darwinModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit dotfilesDir; };
-            home-manager.users.${username} = import ./nix/home.nix;
-          }
-        ];
-        specialArgs = { inherit inputs username hostname; };
+      darwinConfigurations = {
+        "708uMacBookPro" = mkDarwin { hostname = "708uMacBookPro"; };
+        "708uServer" = mkDarwin {
+          hostname = "708uServer";
+          extraModules = [ ./nix/server.nix ];
+        };
       };
     };
 }

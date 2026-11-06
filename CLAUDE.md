@@ -6,8 +6,11 @@ when working with code in this repository.
 ## Commands
 
 ```bash
-# 設定を macOS に適用
+# 設定を macOS に適用 (適用先は LocalHostName で判定する)
 make apply
+
+# hostname が未設定のマシンへの初回適用
+make apply HOST=708uServer
 
 # Nix flake を更新
 make update
@@ -33,8 +36,22 @@ nix/
   shell.nix         # programs.zsh, direnv, fzf, zoxide,
                     # sessionVariables, sessionPath
   symlinks.nix      # mkOutOfStoreSymlink で .config/, .claude/
+  server.nix        # 708uServer 専用の設定
 zsh/                # Zinit 経由で source されるシェル設定
 ```
+
+### ホストごとの設定
+
+`flake.nix` の `mkDarwin` が共通の module を組み立て、
+ホストごとの module を `extraModules` で追加する。
+
+- **708uMacBookPro**: メインマシン。共通の module のみ
+- **708uServer**: Claude Code を常時稼働させる server 用マシン。
+  `server.nix` でスリープを無効にし、それ以外は省電力に寄せる。
+  `batt` で充電上限を固定する
+
+ホスト固有の設定は `server.nix` のようなホスト専用の module に書く。
+list 型のオプション (`homebrew.brews` など) は共通の module と連結される。
 
 ### パッケージ管理の使い分け
 
@@ -102,6 +119,16 @@ twig で branch を切り PR を作成する。
 claude plugin marketplace add \
   .config/claude/plugins/gopls-remote
 claude plugin install gopls-remote@gopls-remote
+```
+
+## 708uServer (手動セットアップ)
+
+`batt` の daemon は root で起動する必要があり、
+brew bundle の `start_service` では起動できない。
+
+```bash
+sudo brew services start batt
+batt limit 80
 ```
 
 ## mutagen
