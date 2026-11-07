@@ -1,8 +1,8 @@
 ---
 name: spawn-worktree-task
 description: >-
-  セッションの文脈から別の作業を切り出し、新しい worktree の herdr workspace で Claude Code を起動して prompt を渡す。「worktree で別タスクを始めて」「この作業を別の Claude に任せて」「spawn worktree」で使用。
-argument-hint: "[branch-name] [指示内容...] [with /command...]"
+  セッションの文脈から別の作業を切り出し、新しい worktree の herdr workspace で Claude Code を起動して prompt を渡す。herdr machine に保存したリモートのマシンでも起動できる。「worktree で別タスクを始めて」「この作業を別の Claude に任せて」「spawn worktree」「リモートのマシンに任せて」「server で worker を動かして」で使用。
+argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>]"
 ---
 
 # spawn-worktree-task
@@ -18,6 +18,16 @@ argument-hint: "[branch-name] [指示内容...] [with /command...]"
 - `with /command` 形式でコマンドを指定すると、prompt内でそのコマンドを呼び出す
   - 例: `/spawn-worktree-task feat/new with /prepare-pr`
   - 複数指定可: `with /command1 /command2`
+- `on <machine>` 形式で herdr machine のラベルかIDを指定すると、そのマシンで起動する（remote mode）
+  - 例: `/spawn-worktree-task feat/new on server`
+  - 複数のタスクを別々のマシンに分ける場合は、タスクごとにこのskillを実行する
+
+## remote mode の前提
+
+- 指定したマシンで herdr server が起動しており、`herdr machine status <machine>` が成功する
+- remote でも `$HOME` から同じ相対パスに repository が clone されている
+- remote で gh の認証と Claude Code へのログインが済んでいる
+- 派生元のブランチ（`--source` 指定がなければ origin のデフォルトブランチ）が push 済みである。remote は origin から取得した最新のコミットを起点にするため、手元の未 push のコミットと未 commit の変更は渡らない。必要な場合は起動前に push するか、ユーザーに確認する
 
 ## コンテキスト
 
@@ -240,8 +250,10 @@ preRunや完了時の手順に以下のコマンドを含める場合は、必�
 ### 5. worktreeの作成とClaude Codeの起動
 
 ```bash
-~/.claude/skills/spawn-worktree-task/scripts/spawn.sh [--pre-run '<preRun>'] [--source <派生元ブランチ>] <branch-name> <promptファイルの絶対パス>
+~/.claude/skills/spawn-worktree-task/scripts/spawn.sh [--pre-run '<preRun>'] [--source <派生元ブランチ>] [--machine <machine>] <branch-name> <promptファイルの絶対パス>
 ```
+
+`--machine` を指定した場合、scriptはSSHでscript自体とpromptファイルをremoteに転送し、remoteの同じパスのrepositoryで以下の処理を実行する。worktreeは `git fetch` で取得した `origin/<派生元ブランチ>` を起点にする。remoteで `twig add` に `--source` は渡さない。
 
 scriptは次の処理を行う。
 
@@ -268,6 +280,21 @@ promptをコマンドの引数 (`claude '<prompt>'`) で渡さないのは、mac
 
 `error` の原因が `herdr agent prompt` の場合、promptが届いていないとは限らない。再送する前に `herdr agent read <agent名> --source recent-unwrapped --lines 40` で画面を確認する。
 
+結果は `status=` で始まる行から読み取る。remote modeでは行末に `machine=<machine>` が付く。remote mode固有の `error` の `reason` は次のとおり。
+
+| reason | 意味 |
+| --- | --- |
+| `machine_not_found` | 有効な保存済みのマシンに一致しない |
+| `repo_outside_home` | 手元のrepositoryが `$HOME` の外にあり、remoteのパスを決められない |
+| `remote_repo_not_found` | remoteに同じパスのrepositoryが無い |
+
+remote modeで起動したagentへの追加の指示や状態の確認では、すべてのherdrのコマンドに `--machine <machine>` を付ける。agent名とIDはremoteのserverの中で決まり、手元のものとは別である。
+
+```bash
+herdr --machine <machine> agent read <agent名> --source recent-unwrapped --lines 40
+herdr --machine <machine> agent prompt <agent名> "<追加の指示>"
+```
+
 ## 例
 
 ```bash
@@ -279,6 +306,9 @@ promptをコマンドの引数 (`claude '<prompt>'`) で渡さないのは、mac
 
 # ブランチ名と指示内容を指定
 /spawn-worktree-task feat/new-feature "ユーザー認証機能を実装してください"
+
+# 保存済みのマシン server で起動
+/spawn-worktree-task feat/new-feature on server
 ```
 
 $ARGUMENTS
