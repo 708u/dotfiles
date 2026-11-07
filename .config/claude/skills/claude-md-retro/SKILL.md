@@ -9,7 +9,6 @@ description: >-
   「同じ指示を何度もしている」などで使う。単発 session の学びの反映や単純な
   品質監査は claude-md-management plugin の管轄で、複数 session を横断した
   発掘を伴うときにこの skill を使う。
-user_invocable: true
 ---
 
 # claude-md-retro

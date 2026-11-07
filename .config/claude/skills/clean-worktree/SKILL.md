@@ -2,7 +2,6 @@
 name: clean-worktree
 description: >-
   マージ済みの git worktree を一括削除し、対応する herdr の workspace と pane も閉じる。削除済み worktree の CWD を持つシェルが残ると mise が check_working_directory でクラッシュし続けるため、workspace と pane も合わせて閉じる必要がある。「clean worktrees」「worktree 掃除」「twig clean」「不要な worktree 削除」「古い workspace 閉じて」「merged branches 整理」や、mise がクラッシュしている・ReportCrash が重いといった状況でも使用する。
-user_invocable: true
 ---
 
 # Clean Worktree

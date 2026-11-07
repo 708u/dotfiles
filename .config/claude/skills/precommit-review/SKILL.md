@@ -8,7 +8,6 @@ description: >-
   ユーザーが明示的に品質チェックを求めたときのみ使用する。
   実装が完了しただけで自動実行はしない。token コストが
   掛かるため、依頼なしの実行は避ける。
-user_invocable: true
 ---
 
 # precommit-review

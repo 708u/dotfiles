@@ -8,7 +8,6 @@ description: >-
   「今どこにいるか俯瞰したい」「stock と flow を分けて」「議論を整理して
   Artifact に」などで使う。会話が長くなり決定・未決・成果物が経緯に
   埋もれてきたときや、全体を俯瞰したいときにも積極的に使う。
-user_invocable: true
 ---
 
 # stock-flow-board

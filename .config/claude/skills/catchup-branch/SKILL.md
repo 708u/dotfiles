@@ -5,7 +5,6 @@ description: >-
   git fetch → main を merge → コンフリクト解消 → push を
   自動実行する。「ブランチ同期」「sync」「main に追従」
   「リモートと合わせたい」「最新にして push したい」で使用。
-user_invocable: true
 ---
 
 # catchup-branch

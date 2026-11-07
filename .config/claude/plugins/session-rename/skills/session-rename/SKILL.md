@@ -7,7 +7,6 @@ description: >-
   読み取り jsonl に反映する。タスクが完了した、
   作業が終わった、セッション名を付けたい、
   最後の仕上げとして使用する。
-user_invocable: true
 ---
 
 # session-rename

@@ -3,7 +3,6 @@ name: saml2aws-login
 description: >-
   herdr の右側に terminal pane を開き、saml2aws login -a gsuite を実行して Enter を送り続け、AWS の一時認証情報を取得する。
   「saml2aws login」「AWS に login」「aws の認証切れ」「ExpiredToken」「credentials の更新」で使用。
-user_invocable: true
 ---
 
 # saml2aws-login
