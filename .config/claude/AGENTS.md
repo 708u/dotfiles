@@ -159,6 +159,8 @@ twig で扱う主な操作:
 - 変更を別 branch へ移動 (carry)
 - merged worktree の削除
 
+herdr の pane 内 (`HERDR_ENV=1`) で `twig add` を実行したら、続けて `herdr worktree open --path <worktree> --no-focus` を実行し、作成した worktree を現在の repository の workspace 配下に表示する。
+
 理由:
 
 - branch 切り替え時に stash が不要になる

@@ -52,7 +52,8 @@ if [[ "${HERDR_ENV:-}" != 1 ]]; then
 fi
 
 label="${branch//\//-}"
-workspace_json=$(herdr worktree open --cwd "$repo_root" --path "$worktree" --label "$label" --no-focus)
+# 呼び出し元とは独立した並列のタスクとして扱うため、worktree open で repository 配下に登録せず、単独の workspace にする
+workspace_json=$(herdr workspace create --cwd "$worktree" --label "$label" --no-focus)
 workspace=$(jq -r '.result.workspace.workspace_id' <<<"$workspace_json")
 pane=$(jq -r '.result.root_pane.pane_id' <<<"$workspace_json")
 summary="worktree=$worktree workspace=$workspace pane=$pane"
