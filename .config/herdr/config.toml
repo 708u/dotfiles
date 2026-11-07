@@ -38,6 +38,8 @@ onboarding = false
 # panel_bg = "#1e1e2e"
 # text = "#cdd6f4"
 
+name = "one-dark"
+auto_switch = false
 [terminal]
 # Executable used for new interactive panes.
 # Empty means $SHELL, then /bin/sh.
@@ -77,6 +79,33 @@ onboarding = false
 # Most reliable direct bindings are ctrl+letter, function keys, and explicit modified chords.
 # alt+..., cmd/super, and punctuation-with-modifiers may depend on your terminal/tmux setup.
 prefix = ["ctrl+a", "cmd+j"]
+
+# cmux の shortcut に寄せる。既定の割り当てと重なるキーは既定の側が警告なしに無効になるため、押し出した操作も移す
+split_vertical = "prefix+d"
+split_horizontal = "prefix+shift+d"
+new_workspace = "prefix+n"
+close_pane = "prefix+w"
+close_workspace = "prefix+shift+w"
+workspace_picker = "prefix+p"
+goto = "prefix+f"
+cycle_pane_previous = "prefix+["
+cycle_pane_next = "prefix+]"
+# shift+[ と書くと、端末が { を shift 修飾なしで送る場合に一致しないため、入力される文字で書く
+previous_tab = "prefix+{"
+next_tab = "prefix+}"
+copy_mode = "prefix+v"
+rename_workspace = "prefix+shift+r"
+reload_config = "prefix+shift+s"
+# agent_panel_sort = "priority" と組み合わせ、prefix+1 で人の対応を最も急ぐ agent へ移動する。
+# 他のマシンの agent と、client が判定する done はこの組み込みの移動でしか扱えない
+focus_agent = "prefix+1..9"
+switch_tab = ""
+last_pane = "prefix+tab"
+# agent_panel_sort = "priority" のため、対応を急ぐ順にマシンをまたいで巡回する
+next_agent = "prefix+s"
+settings = "prefix+;"
+previous_workspace = "prefix+comma"
+next_workspace = "prefix+period"
 
 # Prefix-mode actions
 # help = "prefix+?"
@@ -149,6 +178,19 @@ prefix = ["ctrl+a", "cmd+j"]
 # command = "lazygit"
 # width = "80%"
 # height = "80%"
+
+# このマシンの server にいる agent だけを対象に、人の対応を待つ agent へ移動する。
+# 状態は server の判定を使うため、client の Done 表示と一致しないことがある。
+# 応答待ち (blocked) を未読の完了 (done) より優先し、同じ状態なら最も新しく変わったものを選ぶ。
+# 表示中の agent を候補から外すため、続けて押すと順に回る
+[[keys.command]]
+key = "prefix+a"
+type = "shell"
+description = "jump to local blocked or done agent"
+command = '''
+p=$("$HERDR_BIN_PATH" agent list | jq -r '[.result.agents[] | select((.agent_status == "blocked" or .agent_status == "done") and (.focused | not))] | max_by([(.agent_status == "blocked"), .state_change_seq]) | .pane_id // empty')
+if [ -n "$p" ]; then "$HERDR_BIN_PATH" agent focus "$p"; fi
+'''
 
 # Legacy indexed shortcut config is still parsed for compatibility.
 # Prefer switch_tab, switch_workspace, and focus_agent for new configs.
@@ -256,7 +298,37 @@ sidebar_max_width = 60
 # Ordered status entries at the right edge of the desktop tab bar.
 # Supported types: zoom, hostname, datetime, text, and command.
 # Hostname, datetime, and command entries resolve on the Herdr server.
-# tab_bar_right = []
+# Claude Code の利用上限は statusline が書き出す cache から読む。
+# herdr は /bin/sh -lc で実行し PATH 先頭の date が BSD 版になるため、date -r で epoch を変換する
+tab_bar_right = [
+  { type = "zoom" },
+  { type = "command", interval_seconds = 60, timeout_seconds = 2, command = '''
+f="${XDG_CACHE_HOME:-$HOME/.cache}/claude-statusline/limits.tsv"
+[ -f "$f" ] || exit 1
+# herdr は tab bar の色指定を取り除くため、それ自体に色がある絵文字で statusline と同じ閾値を表す
+fmt() {
+  if [ "$2" = "-" ]; then
+    out="$1 -"
+  else
+    if [ "$2" -lt 50 ]; then i="🟢"; elif [ "$2" -lt 80 ]; then i="🟡"; else i="🔴"; fi
+    out="$1 $i$2%"
+  fi
+  if [ "$3" != "-" ]; then
+    # statusline と同じく、/usage の秒以下の切り捨てを吸収するため 5 分単位に丸める
+    e=$(( ($3 + 150) / 300 * 300 ))
+    if [ "$(/bin/date -r "$e" +%F)" = "$(/bin/date +%F)" ]; then
+      out="$out ↻$(/bin/date -r "$e" +%H:%M)"
+    else
+      out="$out ↻$(/bin/date -r "$e" '+%m/%d %H:%M')"
+    fi
+  fi
+  printf '%s' "$out"
+}
+read -r a ar b br c cr <"$f"
+printf '%s │ %s │ %s\n' "$(fmt 5h "$a" "$ar")" "$(fmt 7d "$b" "$br")" "$(fmt Fable "$c" "$cr")"
+''' },
+]
+tab_bar_right_separator = " │ "
 # tab_bar_right_separator = " "
 
 # Title Herdr writes to the terminal it runs in, which is what window managers
@@ -269,7 +341,7 @@ sidebar_max_width = 60
 
 # Agent panel ordering: "spaces" (grouped by space) or "priority" (attention queue).
 # "workspaces" is accepted as an alias for "spaces".
-# agent_panel_sort = "spaces"
+agent_panel_sort = "priority"
 
 # Agent status indicators: "dots" preserves the compact color marks; "symbols" uses
 # distinct static glyphs for blocked, working, done, idle, and unknown states.
@@ -311,7 +383,8 @@ claude = [
 # herdr = show in-app toasts
 # terminal = ask the outer terminal to show a desktop notification
 # system = ask the OS notification service directly
-# delivery = "off"
+# open_notification_target (prefix+o) は表示中の toast の対象へ移動するため、toast を有効にする
+delivery = "herdr"
 # delay_seconds = 1
 
 [ui.toast.herdr]
@@ -368,14 +441,14 @@ switch_ascii_input_source_in_prefix = true
 # methods keep tracking the candidate window when TUIs paint their own
 # cursor (Claude Code, pi, codex). Trade-off: extra cursor visible for
 # apps that hide it without painting a replacement (vim normal mode, etc.).
-# reveal_hidden_cursor_for_cjk_ime = false
+reveal_hidden_cursor_for_cjk_ime = true
 # Optional allow-list: only reveal for focused panes whose detected agent
 # matches one of these names. Empty means apply to any focused pane.
 # If the list contains no valid names, the reveal does not apply.
 # Accepted: pi, claude, codex, gemini, cursor, devin, cline, opencode,
 # copilot, kimi, kiro, droid, amp, grok, hermes, kilo, qodercli, qoder, qwen,
 # qwen-code, letta, letta-code, maki.
-# cjk_ime_agents = []
+cjk_ime_agents = ["claude"]
 # Cursor shape rendered when reveal_hidden_cursor_for_cjk_ime is true.
 # Values: block, steady_block (default), underline, steady_underline, bar, steady_bar.
 # cjk_ime_cursor_shape = "steady_block"
