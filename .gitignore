@@ -22,6 +22,3 @@ tmp
 
 # claude: tool-managed files
 .config/claude/hooks/herdr-agent-state.sh
-.config/claude/skills/synced/
-.config/claude/skills/herdr
-.config/claude/skills/orchestration/
