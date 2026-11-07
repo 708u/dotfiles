@@ -82,7 +82,7 @@ done
 summary="$summary agent=$agent"
 
 if ! herdr agent start "$agent" --kind claude --pane "$pane" --timeout 60000 \
-  -- --permission-mode acceptEdits >/dev/null 2>&1; then
+  -- --permission-mode auto >/dev/null 2>&1; then
   echo "status=agent_not_ready $summary"
   herdr pane read "$pane" --source recent-unwrapped --lines 20
   exit 1

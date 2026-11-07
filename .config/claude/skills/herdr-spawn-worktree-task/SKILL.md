@@ -249,7 +249,7 @@ scriptは次の処理を行う。
 2. trust dialogが表示されないよう、`~/.claude.json` にworktreeを承認済みとして登録する
 3. `herdr worktree open` でworkspaceを作成する。フォーカスは呼び出し元に残る
 4. preRunを指定した場合は、workspaceのpaneで実行して終了を待つ
-5. `herdr agent start` でClaude Codeを `--permission-mode acceptEdits` で起動する
+5. `herdr agent start` でClaude Codeを `--permission-mode auto` で起動する
 6. `herdr agent prompt` でpromptファイルの内容を送る
 
 promptをコマンドの引数 (`claude '<prompt>'`) で渡さないのは、macOSでは端末の1行あたりの入力上限 (1024 byte) を超えるコマンドを `herdr pane run` が拒否するためである。`herdr agent prompt` はbracketed pasteで送るため、この上限を受けない。
