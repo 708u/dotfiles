@@ -1,14 +1,14 @@
 ---
-description: 指示を元にpromptファイルを作成し、worktreeを作成してherdrで開く
-allowed-tools: Write, Bash(twig add:*), Bash(herdr:*), Bash(git submodule:*)
+description: 指示を元にpromptを作成し、worktreeを作成してherdrのworkspaceでClaude Codeを起動する
+allowed-tools: Bash(twig add:*), Bash(herdr:*), Bash(jq:*), Bash(git submodule:*)
 argument-hint: [branch-name] [指示内容...] [with /command...]
 ---
 
 # herdr-spawn-worktree-task
 
-指示書やセッションの文脈を元に`.twig-claude-prompt-<worktree-name>.sh`を作成し、`twig add --carry --file`で新しいworktreeに転送した上で、herdrで新しいworkspaceを作成して実行する。
+指示書やセッションの文脈を元にpromptを作成し、`twig add`で新しいworktreeを作成する。herdrでそのworktreeのworkspaceを作成してClaude Codeを起動し、promptを送信する。
 
-**並列実行対応**: このコマンドは複数同時に実行可能。ファイル名にworktree名を含むため各worktreeで一意となり、`--carry --file`で個別に転送できる。
+このコマンドは複数同時に実行できる。worktree、workspace、agentの名前はいずれもブランチ名に基づいて決定するため、並列に実行しても衝突しない。
 
 ## 引数（すべてオプション）
 
@@ -60,11 +60,11 @@ twigコマンドの使用方法を把握するため、以下のスキルを必�
 
 1. 現在のセッションの作業内容（会話履歴）を確認する
 2. git statusの変更ファイルから作業内容を推察する
-3. **計画ファイルの確認**: セッション中にplan modeで設計した内容があるか確認する
+3. セッション中にplan modeで設計した計画ファイルがあるか確認する
    - 計画ファイルがある場合、ファイルパスではなく**内容全体**をニュアンスを変えずにそのまま指示に含める
    - 要約・省略・言い換えは禁止。原文のまま全文を転記すること
    - 理由: 新しいworktreeには計画ファイルが存在しないため
-4. **編集対象ファイルの特定（必須）**: タスクで編集が必要なファイルを特定する
+4. タスクで編集が必要なファイルを必ず特定する
    - セッションの会話履歴から編集対象ファイルを抽出する
    - 計画内容に記載されているファイルパスを抽出する
    - 特定したファイルは指示内に `@path/to/file` 形式で含める
@@ -74,12 +74,10 @@ twigコマンドの使用方法を把握するため、以下のスキルを必�
      - セッションの会話から編集対象を一意に特定できる
    - 上記のいずれにも該当しない場合のみAskUserQuestionで確認する
 5. 指示内容を決定する。以下の構成要素を整理する:
-   - preRun（オプション）: タスク開始前に実行するシェルコマンド
+   - preRun（オプション）: Claude Codeの起動前にworktreeで実行するシェルコマンド
    - claudeへの指示: 新しいworktreeで実行したいタスクの説明
    - 編集対象ファイル（必須）: `@path/to/file` 形式のファイル参照
-   - postRun（オプション）: タスク完了後に実行するシェルコマンド
-6. **確認の要否判定**: 以下の条件で確認をスキップできる。
-   該当しない場合のみAskUserQuestionで確認する
+6. ユーザーへの確認が必要かを判定する。以下の条件で確認をスキップでき、該当しない場合のみAskUserQuestionで確認する
    - 確認なしで進める条件（いずれか1つ以上を満たす）:
      - 引数で指示内容が明示的に渡されている
      - セッション中にplan modeで計画を策定済みである
@@ -89,61 +87,21 @@ twigコマンドの使用方法を把握するため、以下のスキルを必�
      - 複数タスクが混在し、どれをworktreeに切り出すか意図が分岐する
      - 編集対象ファイルが全く特定できない
 
-### 3. promptファイル内容の準備とプレビュー
+### 3. promptの作成
 
-指示内容を元に`.twig-claude-prompt-<worktree-name>.sh`ファイルの内容を準備する。
-実際のファイル書き込みはステップ4.1で行う。
-
-**ファイル名の形式**:
-
-ファイル名は `.twig-claude-prompt-<worktree-name>.sh` とする。
-worktree名を含めることで、複数のherdr-spawn-worktree-taskを並列実行してもファイル名が衝突しない。
-
-ファイル形式はシェルスクリプト形式とし、コマンドとして実行可能な状態にする。
-先頭行には必ずshebangを記述する:
-
-```bash
-#!/bin/bash
-```
-
-**必須 preRun: Claude Code初期設定**:
-
-Claude Codeが新しいworktreeで起動した際、trust dialogをスキップして自動的に作業を開始できるよう、以下のスクリプトをpromptファイルの先頭に必ず含める。
-permission modeはclaudeコマンドの`--permission-mode`オプションで指定するため、settings.jsonの変更は不要:
-
-```bash
-# CLAUDECODE環境変数のunset
-# 親のClaude Codeプロセスから継承されると、子プロセスが
-# 正常に起動しないため必ずunsetする
-unset CLAUDECODE
-
-# ~/.claude.jsonへのtrust設定追加（trust dialog/onboardingのスキップ）
-# 既存設定を保持しつつ、trust関連フラグのみ更新
-WORKTREE_PATH="$(pwd)"
-jq --arg path "$WORKTREE_PATH" '
-  .projects //= {} |
-  .projects[$path] = ((.projects[$path] // {}) + {
-    "hasTrustDialogAccepted": true,
-    "hasTrustDialogHooksAccepted": true,
-    "projectOnboardingSeenCount": 1,
-    "hasClaudeMdExternalIncludesApproved": true,
-    "hasClaudeMdExternalIncludesWarningShown": true,
-    "hasCompletedProjectOnboarding": true
-  })
-' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
-```
+指示内容を元に、新しいworktreeのClaude Codeへ送るpromptを作成する。promptはファイルに書き出さず、ステップ4で `herdr agent prompt` に直接渡す。
 
 **計画内容の取り扱い**:
 
 - セッション中にplan modeで作成した計画がある場合、ニュアンスを変えずに**内容全体**をそのまま指示に含める
 - 要約・省略・言い換えは禁止。原文のまま全文を転記すること
 - `@path/to/plan.md` のようなファイルパス参照は**使用しない**
-- 理由: 新しいworktreeには計画ファイルが存在せず、参照が解決できないため
+- 理由: 新しいworktreeには計画ファイルが存在せず、参照を解決できないため
 - 計画内容はそのままテキストとして指示に埋め込む
 
 **編集対象ファイルの参照（必須）**:
 
-新しいworktreeで起動するClaude Codeがセッション開始時点で編集対象ファイルを読み込んだ状態にするため、以下を必ず実行する:
+新しいworktreeで起動するClaude Codeがセッション開始時点で編集対象ファイルを読み込んだ状態にするため、次の規則に従う。
 
 - 編集対象ファイルは必ず `@path/to/file` 形式で指示に含める
 - これにより、新しいセッションは開始時点で編集対象ファイルをコンテキストに含んだ状態になる
@@ -154,65 +112,47 @@ jq --arg path "$WORKTREE_PATH" '
 
 **必要なスキルのロード**:
 
-タスク実行に必要なスキルが存在する場合、指示内に必ずスキル呼び出しを含める:
+タスク実行に必要なスキルが存在する場合、指示内に必ずスキル呼び出しを含める。新しいworktreeで起動するClaude Codeは、呼び出し元のセッションで読み込んだスキルを引き継がない。
 
 - 形式: `/skill-name` または `/plugin:skill-name`
-- 新しいworktreeで起動するClaude Codeが適切なコンテキストを持つために必要
 - 例: git worktree操作が必要な場合は `/twig:twig-guide` を指示に含める
 
 **with指定コマンドの呼び出し**:
 
-引数で`with /command`形式でコマンドが指定された場合、指示内にそのコマンドの呼び出しを含める。コマンドの性質に応じて適切な箇所に配置する:
+引数で`with /command`形式でコマンドが指定された場合、指示内にそのコマンドの呼び出しを含める。配置する箇所はコマンドの種類に応じて次のように決定する。
 
 - `/prepare-pr`, `/commit-push-update-pr` → 完了時の手順に含める
 - `/review`, `/investigate` → メインタスクとして最初に実行するよう指示
 
-**claudeコマンドの記述ルール**:
+**完了時の手順**:
 
-- `claude` の後に `\` で改行してから引数を記述する
-- 理由: 可読性向上のため
-- `--permission-mode acceptEdits` を必ず指定する
-- 理由: settings.jsonを変更せずにCLIオプションでpermission modeを制御するため
+promptの最後に、次の完了手順を必ず含める。
 
-```bash
-#!/bin/bash
+1. 作業完了後、`/simplify` を呼び出してコードを整理する
+2. PRを作成・更新する場合は `/commit-push-update-pr` を呼び出す
 
-# 例1: preRun/postRunあり
-npm install
-claude \
-  --permission-mode acceptEdits \
-"この機能を実装してください..."
-make build
+タスク完了後に実行したいシェルコマンド（ビルドやテストなど）がある場合は、完了時の手順に含める。
 
-# 例2: claudeのみ
-claude \
-  --permission-mode acceptEdits \
-"バグを修正してください..."
+```txt
+例: 完了時の手順を含むprompt
 
-# 例3: 複数行の指示
-pnpm install
-claude \
-  --permission-mode acceptEdits \
-"以下の要件を満たすAPIエンドポイントを実装してください:
-- GET /users でユーザー一覧を取得
-- POST /users で新規ユーザーを作成
-- エラーハンドリングを適切に行う"
-pnpm run test
+@src/api/users.ts に GET /users と POST /users を実装してください。
 
-# 例4: ファイルパスを含む指示
-claude \
-  --permission-mode acceptEdits \
-@path/to/target.ts を修正してください
+完了したら:
+1. /simplify を呼び出してコードを整理
+2. pnpm run test を実行し、失敗があれば修正
+3. /commit-push-update-pr を呼び出してPRを作成・更新
+```
 
-# 例5: 計画内容を直接含める（plan modeで設計した場合）
-claude \
-  --permission-mode acceptEdits \
-"以下の計画に従って実装してください:
+```txt
+例: 計画内容を直接含めるprompt（plan modeで設計した場合）
+
+以下の計画に従って実装してください:
 
 ## 実装計画
 
 ### 1. データモデルの作成
-- User型をsrc/types/user.tsに定義
+- User型を @src/types/user.ts に定義
 - フィールド: id, name, email, createdAt
 
 ### 2. APIエンドポイントの実装
@@ -225,8 +165,6 @@ claude \
 完了したら:
 1. /simplify を呼び出してコードを整理
 2. /commit-push-update-pr を呼び出してPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
-   .completed-twig-claude-prompt.sh にリネーム"
 ```
 
 **並列実行の判定（必須）**:
@@ -242,7 +180,7 @@ promptの指示内容を確定した後、1つの問題を複数の独立した�
   - 例: 複数ファイルへの同種修正をファイル単位で分担
   - 例: 各モジュールへの型定義追加
 
-該当する場合、claudeへの指示に以下を含める:
+該当する場合は、claudeへの指示に次の内容を含める。
 
 1. TeamCreateでチームを作成する
 2. Taskで各サブタスクをチームメイトに委譲する
@@ -250,13 +188,10 @@ promptの指示内容を確定した後、1つの問題を複数の独立した�
 4. 整合性の確認後にcommitする
 5. 依存関係がある場合はaddBlockedByで管理する
 
-該当しない場合は、例1〜5の形式でpromptを作成する。
+```txt
+例: Agent Teamで並列実行するprompt
 
-```bash
-# 例6: Agent Teamで並列実行する場合
-claude \
-  --permission-mode acceptEdits \
-"以下のタスクをAgent Teamで並列実行してください。
+以下のタスクをAgent Teamで並列実行してください。
 
 ## 概要
 ユーザー管理機能を実装する。
@@ -281,27 +216,6 @@ GET /users と POST /users を実装する。
 完了したら:
 1. /simplify を呼び出してコードを整理
 2. /commit-push-update-pr でPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
-   .completed-twig-claude-prompt.sh にリネーム"
-```
-
-**完了時の手順**:
-
-claudeへの指示の最後に、以下の完了手順を必ず含める:
-
-1. 作業完了後、`/simplify` を呼び出してコードを整理する
-2. 必要に応じて `/commit-push-update-pr` を呼び出す
-3. `.twig-claude-prompt-<worktree-name>.sh` を `.completed-twig-claude-prompt.sh` にリネームする
-
-```bash
-# 例: 完了時の手順を含む指示
-claude \
-  --permission-mode acceptEdits \
-"機能を実装してください。完了したら:
-1. /simplify を呼び出してコードを整理
-2. /commit-push-update-pr を呼び出してPRを作成・更新
-3. .twig-claude-prompt-<worktree-name>.sh を
-   .completed-twig-claude-prompt.sh にリネーム"
 ```
 
 **PRの向き先**:
@@ -313,55 +227,87 @@ claude \
 - 例: 「`feat/base`から派生」と指定された場合、PRは`feat/base`に向けて作成する
 - source指定がない場合（デフォルト）はmainに向けてPRを作成する
 
-**重要**: 以下のコマンドをpreRun/postRunに含める場合は、必ずAskUserQuestionで確認すること:
+preRunや完了時の手順に以下のコマンドを含める場合は、必ずAskUserQuestionで確認すること。
 
 - `rm`, `mv`, `chmod`, `chown`
 - `git reset --hard`, `git clean -f`
 - その他破壊的な操作
 
-### 4. promptファイル作成・worktree作成・herdrで開く
+### 4. worktreeの作成とClaude Codeの起動
 
-#### 4.1 promptファイルの作成
+herdrのpane内（`HERDR_ENV=1`）で実行していない場合は、worktreeを作成した後にパスとpromptをユーザーに報告して終了する。
 
-Writeツールを使用して、現在のworktreeにpromptファイルを作成する:
+herdrのコマンドはJSONを返す。以下のステップを順番に実行し、各コマンドの出力から読み取った値を次のコマンドの引数に直接指定すること。変数への代入は禁止。
 
-```txt
-Write to: .twig-claude-prompt-<worktree-name>.sh
-```
-
-ファイル名にworktree名を含めることで、複数のherdr-spawn-worktree-taskを並列実行してもファイル名が衝突しない。
-
-#### 4.2 worktree作成（carryでファイル転送）
-
-Bashで `twig add` を実行してworktreeを作成する。`--carry --file` オプションで作成したpromptファイルのみを新しいworktreeに転送する:
+#### 4.1 worktreeの作成
 
 ```bash
-twig add <branch-name> --carry --file ".twig-claude-prompt-<worktree-name>.sh" -q
+twig add <branch-name> -q
 ```
 
-このコマンドにより:
+`-q` オプションで、作成されたworktreeのパスが出力される。
 
-- 新しいworktreeが作成される
-- promptファイルのみが新しいworktreeに移動（carry）される
-- ソースworktreeからpromptファイルが削除される
-- `-q` オプションで作成されたworktreeのパスが出力される
+#### 4.2 trust dialogのスキップ
 
-#### 4.3 herdrで新しいworkspaceを作成
+新しいworktreeでClaude Codeを起動するとtrust dialogが表示され、promptを受け付けない。これを避けるため、`~/.claude.json` にworktreeのtrust設定を追加する。既存の設定を保持し、trust関連のフラグのみ更新する。
 
-herdrのpane内（`HERDR_ENV=1`）で実行していない場合は、worktreeのパスをユーザーに報告して終了する。
+```bash
+jq --arg path "/path/to/worktree" '
+  .projects //= {} |
+  .projects[$path] = ((.projects[$path] // {}) + {
+    "hasTrustDialogAccepted": true,
+    "hasTrustDialogHooksAccepted": true,
+    "projectOnboardingSeenCount": 1,
+    "hasClaudeMdExternalIncludesApproved": true,
+    "hasClaudeMdExternalIncludesWarningShown": true,
+    "hasCompletedProjectOnboarding": true
+  })
+' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+```
 
-`twig add -q` の出力からworktreeのパスを取得し、`herdr worktree open` でそのworktreeのworkspaceを作成する。
-`--cwd` に呼び出し元のリポジトリを指定すると、作成されたworkspaceは呼び出し元と同じリポジトリのworktreeとして紐づく。
+#### 4.3 workspaceの作成
 
-herdrのコマンドはJSONを返す。以下のステップを順番に実行し、各コマンドのJSONから読み取ったIDを次のコマンドの引数に直接指定すること。変数への代入は禁止。
+`herdr worktree open` でworktreeのworkspaceを作成する。`--cwd` に呼び出し元のリポジトリを指定すると、作成されたworkspaceは呼び出し元と同じリポジトリのworktreeとして紐づく。`--no-focus` で呼び出し元のフォーカスを維持する。
 
-1. `herdr worktree open` を実行する。
-   `--cwd` に呼び出し元のリポジトリのパス、`--path` にworktreeのパス、`--label` にworkspace名を指定し、`--no-focus` で呼び出し元のフォーカスを維持する。
-   `.result.root_pane.pane_id` がpaneのIDである。これを控える。
-   例: `herdr worktree open --cwd "$PWD" --path /path/to/worktree --label feat-add-user-auth --no-focus`
-2. `herdr pane run` で、手順1のpaneにpromptスクリプトの実行コマンドを送る。paneのcwdはworktreeになっているためcdは不要。
-   `pane run` はコマンドとEnterをまとめて送る。
-   例: `herdr pane run <pane-id> "bash .twig-claude-prompt-<worktree-name>.sh"`
+```bash
+herdr worktree open --cwd "$PWD" --path /path/to/worktree --label <workspace-name> --no-focus
+```
+
+`.result.root_pane.pane_id` がpaneのIDである。これを控えておく。paneのcwdはworktreeになっている。
+
+#### 4.4 preRunの実行
+
+preRunがある場合のみ実行する。終了コードを目印として表示し、表示されるまで待機する。
+
+```bash
+herdr pane run <pane-id> '<preRun>; echo "PRERUN_EXIT=$?"'
+herdr pane wait-output <pane-id> --regex 'PRERUN_EXIT=[0-9]+' --timeout 600000
+```
+
+終了コードが0以外のときはClaude Codeを起動せず、`herdr pane read <pane-id> --source recent-unwrapped --lines 40` の内容をユーザーに報告して終了する。
+
+#### 4.5 Claude Codeの起動
+
+```bash
+herdr agent start <agent-name> --kind claude --pane <pane-id> -- --permission-mode acceptEdits
+```
+
+- `<agent-name>` はworkspace名を使う。agent名は `[a-z][a-z0-9_-]{0,31}` に一致し、起動中のagentの中で一意である必要がある。32文字を超える場合は切り詰め、既存のagent名と重複する場合は末尾に `-2` などを付ける
+- `--permission-mode acceptEdits` はsettings.jsonを変更せずにpermission modeを指定するため
+- `agent_not_ready` が返された場合は、`herdr agent read <agent-name> --source recent-unwrapped --lines 40` で画面を確認し、ユーザーに報告して終了する
+
+#### 4.6 promptの送信
+
+ステップ3で作成したpromptを `herdr agent prompt` で送信する。promptに引用符や改行が含まれても崩れないよう、引用符付きのヒアドキュメントで渡す。`--wait` は付けず、送信の完了を確認した時点で終了する。
+
+```bash
+herdr agent prompt <agent-name> "$(cat <<'PROMPT'
+<ステップ3で作成したprompt>
+PROMPT
+)"
+```
+
+`claude '<prompt>'` のようにpromptをコマンドの引数で渡す方法は使用しない。macOSでは端末の1行入力の上限 (1024 byte) を超えるコマンドを `herdr pane run` が拒否するため、計画の全文を含むpromptを送れない。`herdr agent prompt` はbracketed pasteで送信するため、この上限を受けない。
 
 **workspace名の命名規則**:
 
@@ -374,8 +320,8 @@ herdrのコマンドはJSONを返す。以下のステップを順番に実行�
 このコマンドを実行すると、次の状態になる。
 
 - herdrに新しいworkspaceが作成される
-- worktreeでpromptスクリプトが実行され、Claude Codeが自動的に起動する
-- workspace名から作業内容を一目で識別できる
+- worktreeでClaude Codeが起動し、promptを受け取って作業を開始する
+- workspace名とagent名から作業内容を一目で識別できる
 
 ## 例
 
