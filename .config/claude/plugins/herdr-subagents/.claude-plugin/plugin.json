@@ -1,0 +1,5 @@
+{
+  "name": "herdr-subagents",
+  "version": "0.1.0",
+  "description": "動いている subagent の数を herdr の agent sidebar に表示する"
+}

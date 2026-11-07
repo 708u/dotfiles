@@ -1,0 +1,15 @@
+{
+  "name": "herdr-subagents",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "herdr-subagents",
+      "source": "./",
+      "description": "動いている subagent の数を herdr の agent sidebar に表示する",
+      "version": "0.1.0"
+    }
+  ]
+}

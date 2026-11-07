@@ -134,6 +134,11 @@ twig で branch を切り PR を作成する。
 claude plugin marketplace add \
   .config/claude/plugins/gopls-remote
 claude plugin install gopls-remote@gopls-remote
+
+# 動いている subagent の数を herdr の agent sidebar に表示する
+claude plugin marketplace add \
+  ./.config/claude/plugins/herdr-subagents
+claude plugin install herdr-subagents@herdr-subagents
 ```
 
 ## 708uServer (手動セットアップ)
