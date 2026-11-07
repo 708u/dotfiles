@@ -1,5 +1,8 @@
 command = /bin/zsh
-font-family = HackGen35Nerd
+font-family = HackGen35 Console NF
+# cod-claude は HackGen NF に無いため、この codepoint だけ Nerd Fonts の記号 font で描く。
+# font-family に足すと、それが cell の大きさの基準になり得る
+font-codepoint-map = U+EC82=Symbols Nerd Font Mono
 
 cursor-style = block
 cursor-style-blink = true

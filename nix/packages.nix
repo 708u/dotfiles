@@ -21,6 +21,7 @@
     fira-code
     hackgen-font
     hackgen-nf-font
+    nerd-fonts.symbols-only
     fzf
     gh
     ghq

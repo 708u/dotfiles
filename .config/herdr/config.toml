@@ -362,11 +362,29 @@ agent_panel_sort = "priority"
 rows = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
 # Optional canonical agent IDs replace the default rows for matching agents.
 [ui.sidebar.agents.rows_by_agent]
-# $model, $effort, $ctx は Claude Code の statusline から送る
+# $model, $effort, $ctx_* は Claude Code の statusline から送る。色は statusline と同じ基準にする。
+# $ctx_low, $ctx_mid, $ctx_high は context 使用率を閾値ごとに振り分けた token で、値を持つのは常に 1 つ
 claude = [
   ["state_icon", "machine", "workspace", "tab"],
   ["terminal_title_stripped"],
-  ["agent", "$model", { token = "$effort", dim = true }, "$ctx"],
+  [
+    { token = "agent", fg = "#d97757" },
+    { token = "$model", rules = [
+      { contains = "opus", ignore_case = true, fg = "#c678dd" },
+      { contains = "sonnet", ignore_case = true, fg = "#56b6c2" },
+      { contains = "haiku", ignore_case = true, fg = "#98c379" },
+      { contains = "fable", ignore_case = true, fg = "#e06c75" },
+    ] },
+    { token = "$effort", dim = true, rules = [
+      { equals = "medium", fg = "#98c379", dim = false },
+      { equals = "high", fg = "#e5c07b", dim = false },
+      { equals = "xhigh", fg = "#e06c75", dim = false },
+      { equals = "max", fg = "#e06c75", dim = false },
+    ] },
+    { token = "$ctx_low", fg = "#98c379" },
+    { token = "$ctx_mid", fg = "#e5c07b" },
+    { token = "$ctx_high", fg = "#e06c75" },
+  ],
 ]
 
 # Expanded space rows. Built-ins are state_icon, state_text, workspace, branch, and git_status.
