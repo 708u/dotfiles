@@ -9,7 +9,8 @@
 # 届かなかった session は、記録した claude の process が終了していれば集計前に消す。
 set -uo pipefail
 
-export PATH="/etc/profiles/per-user/708u/bin:/run/current-system/sw/bin:/usr/bin:/bin:$PATH"
+# herdr はマシンによって nix と Homebrew のどちらで入れたかが異なるため、両方を探す
+export PATH="/etc/profiles/per-user/708u/bin:/run/current-system/sw/bin:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
 
 [[ -n "${HERDR_PANE_ID:-}" ]] || exit 0
 command -v herdr >/dev/null || exit 0
