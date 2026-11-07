@@ -222,7 +222,7 @@ ${lines.join("\n")}
 </observed>
 
 1. 次のものは片付ける
-   - merge 済みの worktree と local branch、対応する cmux workspace (clean-worktree skill を使う)
+   - merge 済みの worktree と local branch、対応する herdr の workspace と pane (clean-worktree skill を使う)
    - main の worktree の fetch --prune と fast-forward
    - この session が起動した常駐プロセス、定期実行、ブラウザのタブや pane
 2. 次のものは変更せず、一覧で報告する
