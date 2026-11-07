@@ -461,9 +461,38 @@ test("対応が要らない CI の進行と merge 可否の再計算は変化と
       { ...PR, checks: "SUCCESS:3", mergeStateStatus: "CLEAN" },
     ),
   ).toEqual([]);
-  expect(describeChanges(PR, { ...PR, mergeStateStatus: "BEHIND" })).toEqual([
-    "mergeStateStatus: BLOCKED → BEHIND",
+  expect(describeChanges(PR, { ...PR, mergeStateStatus: "BEHIND" })).toEqual(
+    [],
+  );
+  expect(describeChanges(PR, { ...PR, mergeStateStatus: "DIRTY" })).toEqual([
+    "mergeStateStatus: BLOCKED → DIRTY",
   ]);
+});
+
+test("approve 済みの PR が base に遅れたら変化として扱う", () => {
+  const approved: PrSnapshot = {
+    ...PR,
+    reviewDecision: "APPROVED",
+    mergeStateStatus: "CLEAN",
+  };
+  expect(
+    describeChanges(approved, { ...approved, mergeStateStatus: "BEHIND" }),
+  ).toEqual(["mergeStateStatus: CLEAN → BEHIND"]);
+  // BEHIND のまま approve されたときは reviewDecision の変化で投稿する
+  expect(
+    describeChanges(
+      { ...PR, mergeStateStatus: "BEHIND" },
+      { ...approved, mergeStateStatus: "BEHIND" },
+    ),
+  ).toEqual(["reviewDecision: REVIEW_REQUIRED → APPROVED"]);
+  expect(
+    buildContinuePrompt({
+      verdict: "WAIT_EXTERNAL",
+      target: null,
+      pr: { ...approved, mergeStateStatus: "BEHIND" },
+      changes: [],
+    }),
+  ).toContain("(OPEN, reviewDecision: APPROVED, mergeStateStatus: BEHIND)");
 });
 
 test("判定の入力は最後の返答を分け、ユーザー以外の入力を event として渡す", () => {
@@ -485,5 +514,36 @@ test("判定の入力は最後の返答を分け、ユーザー以外の入力�
   expect(prompt.split(last)).toHaveLength(2);
   expect(JUDGE_SYSTEM).toContain(
     "「確認が終わったら〜する」のように、ユーザー側の出来事を条件とする予告は WAIT_USER とする",
+  );
+});
+
+test("conflict が発生したら投稿し、base が進んだだけなら投稿しない", async ($, on) => {
+  const clock = mock.clock(on);
+  const state = world(on);
+  await $.session.start({
+    cwd: "/repo",
+    surface: "terminal",
+    isInteractive: true,
+  });
+
+  await $.turn.complete(
+    turn("PR #12 を作成しました。レビューを待っています。"),
+  );
+  await clock.advance(31 * MINUTE);
+  await $.turn.complete(turn("レビューはまだありません。\nSTATUS: waiting"));
+  expect(state.submitted).toHaveLength(1);
+
+  state.pr = { ...state.pr, mergeStateStatus: "BEHIND" };
+  await clock.advance(40 * MINUTE);
+  expect(state.submitted).toHaveLength(1);
+
+  state.pr = { ...state.pr, mergeStateStatus: "DIRTY" };
+  await clock.advance(5 * MINUTE);
+  expect(state.submitted).toHaveLength(2);
+  expect(state.submitted[1]).toContain(
+    "前回からの変化: mergeStateStatus: BEHIND → DIRTY",
+  );
+  expect(state.submitted[1]).toContain(
+    "mergeStateStatus が DIRTY (conflict) のとき",
   );
 });

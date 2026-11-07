@@ -16,8 +16,13 @@ const VERDICTS: readonly Verdict[] = [
 
 const FAILED_CHECK =
   /\b(?:FAILURE|ERROR|CANCELLED|TIMED_OUT|ACTION_REQUIRED|STARTUP_FAILURE):/;
-// DIRTY は conflict、BEHIND は branch protection が base への追従を求めている状態
-const NEEDS_UPDATE = new Set(["DIRTY", "BEHIND"]);
+// base の取り込みは CI を回し直すため、conflict (DIRTY) のときと、approve 済みで base への追従だけが merge を妨げている (BEHIND) ときに限る
+function needsBaseUpdate(pr: PrSnapshot): boolean {
+  return (
+    pr.mergeStateStatus === "DIRTY" ||
+    (pr.mergeStateStatus === "BEHIND" && pr.reviewDecision === "APPROVED")
+  );
+}
 
 export type Judge = {
   summary: string;
@@ -119,7 +124,7 @@ export function describeChanges(
   if (FAILED_CHECK.test(after.checks)) {
     pairs.push(["CI", before.checks, after.checks]);
   }
-  if (NEEDS_UPDATE.has(after.mergeStateStatus)) {
+  if (needsBaseUpdate(after)) {
     pairs.push([
       "mergeStateStatus",
       before.mergeStateStatus,
@@ -205,7 +210,7 @@ function observedBlock(observed: Observed): string {
   }
   if (observed.pr !== null) {
     lines.push(
-      `PR: #${observed.pr.number} ${observed.pr.url} (${observed.pr.state})`,
+      `PR: #${observed.pr.number} ${observed.pr.url} (${observed.pr.state}, reviewDecision: ${observed.pr.reviewDecision || "なし"}, mergeStateStatus: ${observed.pr.mergeStateStatus || "なし"})`,
     );
   }
   for (const change of observed.changes) {
@@ -234,10 +239,12 @@ ${observedBlock(observed)}
    - 対応不要: 誤解や既に対応済みのもの
    「修正が必要」は修正して local の test を通し、commit と push まで行う。push 後は PR description を差分に合わせて更新する。
    「判断が必要」と「対応不要」は変更せず、理由を添えて一覧で報告する
-4. A で変化がないとき: 依頼範囲に入る次の作業だけ行う
+4. A のとき: レビューコメントの有無によらず、依頼範囲に入る次の作業も行う
    - CI の失敗の修正
-   - mergeStateStatus が DIRTY (conflict) か BEHIND (base への追従が必須) のときの base の取り込み。それ以外のときは base が進んでも取り込まない
+   - mergeStateStatus が DIRTY (conflict) のとき: base を取り込んで conflict を解消し、local の test を通して push する。どちらの変更を残すかに判断が要るときは解消せず、conflict の箇所を報告する
+   - mergeStateStatus が BEHIND で reviewDecision が APPROVED のとき: base を取り込み、local の test を通して push する
    - PR description と差分の食い違いの修正、QA の証跡の不足の補充
+   上の 2 つの条件に当たらなければ、base が進んでいても base を取り込まない
 5. B と D のとき: 何も変更せず、待っている内容を 1 行で報告して終わる
 6. C のとき: 中断した位置から作業を再開する
 
