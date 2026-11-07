@@ -30,7 +30,7 @@ git branch --show-current
 ### 2. 未コミット変更の退避
 
 未コミットの変更（staged / unstaged / untracked）が
-ある場合、stash で退避する。
+ある場合は、stash で退避する。
 
 ```bash
 git stash push -u -m "catchup-branch: auto stash"
@@ -58,10 +58,10 @@ git merge origin/main
 merge でコンフリクトが発生した場合:
 
 1. `git diff --name-only --diff-filter=U` で
-   コンフリクトファイルを一覧する
+   コンフリクトファイルの一覧を表示する
 2. 各ファイルのコンフリクト箇所を Read で確認する
 3. ローカル側・リモート側の変更意図を読み取り、
-   両方の意図を活かすマージを行う
+   両方の意図を活かしてマージを行う
    - 意図が競合する場合はユーザーに判断を仰ぐ
 4. 解消後、`git add` して `git commit` する
 

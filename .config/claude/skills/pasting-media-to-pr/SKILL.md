@@ -31,7 +31,7 @@ $ARGUMENTS
 
 ### 画面全体をクリップボードにキャプチャ
 
-Chrome MCPの`screenshot`で取得した画像URLは内部用のため外部からアクセス不可。
+Chrome MCPの`screenshot`で取得した画像URLは内部用のため、外部からはアクセスできない。
 macOSの`screencapture`を使用すること。
 
 ```bash
@@ -83,7 +83,7 @@ mcp__claude-in-chrome__navigate url="<PR_URL>" tabId=<tab_id>  # PRのURLに移�
 ### 編集モードに入る
 
 座標ではなくrefを使用してクリックすること。
-refはDOM更新で変わるため、必ず「取得→即クリック」をセットで実行する。
+refはDOM更新で変わるため、必ず「取得→即クリック」を一連の流れとして実行する。
 
 ```txt
 # 1. read_pageでインタラクティブ要素を取得し、"Edit comment"のrefを特定
@@ -151,8 +151,8 @@ mcp__claude-in-chrome__computer action=left_click ref=ref_YYY tabId=<tab_id>
 
 ## 注意事項
 
-- **refは常に変わる**: ページリロードやDOM更新でrefが変わるため、read_pageで取得後すぐに使用すること
-- `pbcopy` はテキスト専用のためメディアファイルには使用不可
+- **refは常に変わる**: ページリロードやDOM更新でrefが変わるため、read_pageで取得したあとはすぐに使用すること
+- `pbcopy` はテキスト専用のためメディアファイルには使用できない
 - `osascript` または `screencapture -c` を使用する
 - GitHubがメディアを自動でアップロードし、適切なタグに変換する
 

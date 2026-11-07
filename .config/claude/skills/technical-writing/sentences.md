@@ -9,7 +9,7 @@
 | 能動態 | 主語 + 動詞 + 目的語 | The cat sat on the mat. |
 | 受動態 | 目的語 + be動詞 + 過去分詞 | The mat was sat on by the cat. |
 
-### 受動態の認識方法
+### 受動態の見分け方
 
 受動態の動詞は通常「be動詞 + 過去分詞」で構成:
 
@@ -19,10 +19,10 @@
 
 ### 能動態を優先する理由
 
-1. 読者の処理時間を短縮
-2. より直接的で明確な意思疎通
-3. 行為者の曖昧性を回避
-4. 一般的により簡潔
+1. 読者の理解にかかる時間を短縮できる
+2. より直接的で明確に伝わる
+3. 行為者が曖昧になるのを防げる
+4. 一般的により簡潔になる
 
 ### 変換例
 
@@ -34,7 +34,7 @@
 
 ### 受動態が適切な場合
 
-- 行為者が不明または重要でない場合
+- 行為者が不明、または重要でない場合
 - 行為者を意図的に省略したい場合
 - 科学論文の慣習に従う場合
 
@@ -64,7 +64,7 @@ Configure the settings. → (You) configure the settings.
 | This error message happens when... | The system generates this error message when... |
 | We are very careful to ensure... | We carefully ensure... |
 
-強い動詞を選ぶことで、文章に具体性と明確さが生まれる。
+強い動詞を選ぶことで、文章が具体的かつ明確になる。
 
 ### "There is/There are"の排除
 
@@ -86,13 +86,13 @@ Configure the settings. → (You) configure the settings.
 | very large | 10GB |
 | extremely reliable | 99.99% uptime |
 
-これにより文書がマーケティング資料のようにならず、信頼性を維持できる。
+これにより、文章が宣伝文のようにならず、信頼性を維持できる。
 
 ## 短い文章
 
 ### 1文1アイデアの原則
 
-各文は単一の考えに焦点を当てる。
+各文では単一の考えに焦点を当てる。
 
 ```txt
 悪い例:
@@ -143,5 +143,5 @@ To configure the system:
 | which | 非本質的な従属節（コンマ前） | Python, which was invented by Guido, is popular. |
 | that | 必須の従属節（コンマなし） | Calculations that don't involve algebra are simpler. |
 
-"which"で始まる節を削除しても文の意味が通じる場合、それは非本質的。
-"that"で始まる節を削除すると文の意味が変わる場合、それは必須。
+"which" で始まる節を削除しても文の意味が通じる場合、その節は非本質的である。
+"that" で始まる節を削除すると文の意味が変わってしまう場合、その節は必須である。

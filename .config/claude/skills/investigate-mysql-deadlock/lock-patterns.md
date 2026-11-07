@@ -2,7 +2,7 @@
 
 ## ロック種別の読み方
 
-deadlock log の `HOLDS THE LOCK(S)` / `WAITING FOR THIS LOCK TO BE GRANTED`
+deadlock log の `HOLDS THE LOCK(S)` や `WAITING FOR THIS LOCK TO BE GRANTED`
 に表示されるロック種別の意味。
 
 ### レコードロック (`lock_mode X locks rec but not gap`)
@@ -45,7 +45,7 @@ INSERT 前にギャップ内の挿入位置を予約するロック。
 ```
 
 根本原因: cleanup の DELETE が非 unique search condition で
-ギャップロックを取得し、FK CASCADE チェックで子テーブルまでロックが伝播。
+ギャップロックを取得し、FK CASCADE チェックによって子テーブルまでロックが伝播する。
 
 ### パターン2: FOR SHARE/UPDATE による全件スキャン
 
@@ -59,8 +59,8 @@ INSERT 前にギャップ内の挿入位置を予約するロック。
   → X ロック待ち
 ```
 
-根本原因: テストコードではなく実装コードの `FOR SHARE` が
-テスト用データ以外のレコードもロック。
+根本原因: テストコードではなく実装コードの `FOR SHARE` が、
+テスト用データ以外のレコードもロックする。
 
 ### パターン3: SetupDb のデータが他テストに見える
 
@@ -74,7 +74,7 @@ INSERT 前にギャップ内の挿入位置を予約するロック。
 根本原因: SetupDb はデータをコミットするため、
 他テストの全件スキャン系クエリに拾われる。
 MySQL の FK 制約チェックは READ COMMITTED で評価されるため、
-トランザクション内のスナップショットでは見えていても
+トランザクション内のスナップショットで見えていても、
 DELETE がコミットされた後は FK 違反になる。
 
 ## 判定フローチャート

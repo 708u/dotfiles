@@ -4,7 +4,7 @@ Zennのコードブロック拡張機能について。
 
 ## 基本
 
-言語を指定するとシンタックスハイライトが適用される。
+言語を指定すると、シンタックスハイライトが適用される。
 
 ````markdown
 ```javascript
@@ -14,7 +14,7 @@ const greeting = "Hello, Zenn!";
 
 ## ファイル名表示
 
-言語名の後にコロンとファイル名を指定。
+言語名の後にコロンとファイル名を指定する。
 
 ````markdown
 ```js:src/utils/helper.js
@@ -24,7 +24,7 @@ export const helper = () => {
 ```
 ````
 
-表示例: コードブロック上部に `src/utils/helper.js` が表示される。
+表示例: コードブロックの上部に `src/utils/helper.js` が表示される。
 
 ### ファイル名のみ
 
@@ -37,7 +37,7 @@ key=value
 
 ## diff表示
 
-`diff` の後に言語を指定。
+`diff` の後に言語を指定する。
 
 ````markdown
 ```diff js
@@ -75,7 +75,7 @@ key=value
 - YAML/JSON: `yaml`, `json`
 - Markdown: `markdown`, `md`
 
-その他多数。言語名は小文字で指定。
+その他多数。言語名は小文字で指定する。
 
 ## 注意点
 

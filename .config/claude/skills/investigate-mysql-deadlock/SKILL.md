@@ -20,7 +20,7 @@ integration test の並列実行時に発生するデッドロックの原因を
 ## 初期化（スキルロード時に即実行）
 
 スキルが読み込まれた時点で general_log を有効化する。
-再現テスト実行前からクエリを記録しておくことで、
+再現テストの実行前からクエリを記録しておくことで、
 thread ID の追跡漏れを防ぐ。
 
 ```bash
@@ -45,7 +45,7 @@ go test -tags="integration" -count=100 \
   -run 'TestA|TestB' ./path/to/package/...
 ```
 
-NOTE: `-count` を使わないと Go のテストキャッシュにより1回しか実行されない。
+NOTE: `-count` を使わないと、Go のテストキャッシュにより1回しか実行されない。
 
 ### InnoDB deadlock log の確認
 
@@ -64,7 +64,7 @@ deadlock log から以下を読み取る:
 
 ### deadlock とテストの対応付け（general_log）
 
-deadlock log だけではどのテスト関数が原因か特定できない。
+deadlock log だけではどのテスト関数が原因かを特定できない。
 general_log は初期化セクションで有効化済みのため、
 thread ID で全クエリをトレースできる。
 
@@ -99,7 +99,7 @@ deadlock log の HOLDS/WAITING から原因パターンを判定する。
 
 ### 調査完了
 
-general_log を無効化する。有効のままだと I/O 負荷が継続するため必ず実行する。
+general_log を無効化する。有効のままだと I/O 負荷が継続するため、必ず実行する。
 
 ```bash
 mysql -h 127.0.0.1 -P 3307 -u root \
