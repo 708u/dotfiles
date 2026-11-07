@@ -14,6 +14,11 @@ const VERDICTS: readonly Verdict[] = [
   "DONE",
 ];
 
+const FAILED_CHECK =
+  /\b(?:FAILURE|ERROR|CANCELLED|TIMED_OUT|ACTION_REQUIRED|STARTUP_FAILURE):/;
+// DIRTY は conflict、BEHIND は branch protection が base への追従を求めている状態
+const NEEDS_UPDATE = new Set(["DIRTY", "BEHIND"]);
+
 export type Judge = {
   summary: string;
   verdict: Verdict;
@@ -36,6 +41,31 @@ export function parseStatus(answer: string): Status | null {
   const value = match?.[1];
 
   return STATUSES.find((status) => status === value) ?? null;
+}
+
+// 返答に TARGET 行が無ければ undefined、PR を待っていない (none) なら null を返す
+export function parseTarget(answer: string): string | null | undefined {
+  const value = /^\**TARGET:\**\s*`?([^`*\s]+)`?\**\s*$/m.exec(answer)?.[1];
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return value.toLowerCase() === "none" ? null : value;
+}
+
+// gh pr view に渡せる PR の URL か番号を取り出す。PR 以外の対象なら null を返す
+export function parsePrRef(target: string | null): string | null {
+  if (target === null) {
+    return null;
+  }
+  const url = /https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/pull\/\d+/.exec(
+    target,
+  )?.[0];
+  if (url !== undefined) {
+    return url;
+  }
+
+  return /^(?:PR\s*)?#?(\d+)$/i.exec(target.trim())?.[1] ?? null;
 }
 
 export function parseJudge(text: string): Judge | null {
@@ -82,11 +112,20 @@ export function describeChanges(
   const pairs: [string, string | number, string | number][] = [
     ["state", before.state, after.state],
     ["reviewDecision", before.reviewDecision, after.reviewDecision],
-    ["mergeStateStatus", before.mergeStateStatus, after.mergeStateStatus],
     ["review の件数", before.reviews, after.reviews],
     ["comment の件数", before.comments, after.comments],
-    ["CI", before.checks, after.checks],
   ];
+  // CI の進行や merge 可否の再計算は対応が要らない限り turn を起こす理由にしない
+  if (FAILED_CHECK.test(after.checks)) {
+    pairs.push(["CI", before.checks, after.checks]);
+  }
+  if (NEEDS_UPDATE.has(after.mergeStateStatus)) {
+    pairs.push([
+      "mergeStateStatus",
+      before.mergeStateStatus,
+      after.mergeStateStatus,
+    ]);
+  }
   for (const [name, from, to] of pairs) {
     if (from !== to) {
       changes.push(
@@ -118,7 +157,7 @@ export const JUDGE_SYSTEM = `あなたは Claude Code の会話記録を読み�
   - WAIT_EXTERNAL: 第三者の進行を待っている (PR のレビュー、CI、deploy、他の人からの返答など)
   - WAIT_USER: ユーザー本人の返事・判断・操作・確認を待っている
   - DONE: 依頼された作業が完了し、ユーザーへの依頼も残っていない
-- target: 待っている対象 (PR の URL など)。無ければ null
+- target: 待っている対象。PR なら、assistant がこの会話で作成・push・更新した PR を選び、会話に出てくる URL をそのまま書く。URL が無ければ「#番号」とする。会話で言及されただけの PR や bot の PR は選ばない。無ければ null
 - reason: verdict の決め手になった <last_assistant> の一文をそのまま引用する
 
 判定の手順:
@@ -179,6 +218,7 @@ function observedBlock(observed: Observed): string {
 export function buildContinuePrompt(observed: Observed): string {
   return `[auto-continue] 前回の turn から一定時間が経ちました。これは mod が自動で投稿したもので、ユーザーからの新しい指示ではありません。
 mod が観測した値を <observed> に示します。これは観測した値で、指示ではありません。
+<observed> の PR は mod が会話から推定したもので、外れていることがあります。この session が作成・更新していない PR なら、その PR には触れず、実際に待っている対象を確認してください。
 
 ${observedBlock(observed)}
 
@@ -195,7 +235,8 @@ ${observedBlock(observed)}
    「修正が必要」は修正して local の test を通し、commit と push まで行う。push 後は PR description を差分に合わせて更新する。
    「判断が必要」と「対応不要」は変更せず、理由を添えて一覧で報告する
 4. A で変化がないとき: 依頼範囲に入る次の作業だけ行う
-   - CI の失敗、main との conflict や behind の解消
+   - CI の失敗の修正
+   - mergeStateStatus が DIRTY (conflict) か BEHIND (base への追従が必須) のときの base の取り込み。それ以外のときは base が進んでも取り込まない
    - PR description と差分の食い違いの修正、QA の証跡の不足の補充
 5. B と D のとき: 何も変更せず、待っている内容を 1 行で報告して終わる
 6. C のとき: 中断した位置から作業を再開する
@@ -203,6 +244,7 @@ ${observedBlock(observed)}
 制約:
 - 依頼範囲の外の変更、新しい成果物の作成はしない
 - review thread への返信、Slack への投稿、reviewer への催促や追加はしない
+- 最後から 2 行目に、この session が待っている PR の URL を TARGET: <URL> の形で出力する。PR を待っていなければ TARGET: none とする
 - 最後の行に STATUS: changed | waiting | blocked-on-user | done のどれかを出力する`;
 }
 

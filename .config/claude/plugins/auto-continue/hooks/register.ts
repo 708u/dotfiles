@@ -1,7 +1,7 @@
 import { atom, read, update } from "claude-code";
-import type { EngineInterface, Register } from "claude-code";
+import type { AgentStatus, EngineInterface, Register } from "claude-code";
 
-import type { Entry, Memory, Verdict } from "../types";
+import type { Entry, Memory, PrSnapshot, Verdict } from "../types";
 import { probeCleanup, probePullRequest } from "./probe";
 import {
   JUDGE_SYSTEM,
@@ -10,7 +10,9 @@ import {
   buildJudgePrompt,
   describeChanges,
   parseJudge,
+  parsePrRef,
   parseStatus,
+  parseTarget,
 } from "./prompts";
 
 const IDLE_MS = 30 * 60 * 1000;
@@ -21,7 +23,12 @@ const MAX_AUTO_TURNS = 6;
 const ENTRY_CHARS = 4000;
 const BUFFER_LIMIT = 20;
 const HUMAN_ORIGINS = new Set(["composer", "bridge", "sdk"]);
-const PR_URL = /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/;
+// 動作中の agent は終わると session に通知が届くため、その間は投稿しない
+const BUSY_AGENT_STATUSES = new Set<AgentStatus>([
+  "pending",
+  "running",
+  "waiting",
+]);
 const JUDGE_REQUEST = {
   model: "haiku",
   system: JUDGE_SYSTEM,
@@ -59,7 +66,6 @@ function clip(text: string): string {
 }
 
 // 再読み込みで初期化されてよい値だけを module の変数に置き、残したい値は $.state に置く
-let cwd = "";
 let isTurnRunning = false;
 let isDeciding = false;
 let isAutoInFlight = false;
@@ -113,6 +119,29 @@ async function submit(
   return "投稿した";
 }
 
+// session の起動位置の branch から PR を推定すると、別の用途の branch (deploy 用など) の PR を拾うため、会話から得た対象だけを引く
+async function probeTarget(
+  $: EngineInterface,
+  target: string | null,
+): Promise<PrSnapshot | null> {
+  const ref = parsePrRef(target);
+  if (ref === null) {
+    return null;
+  }
+
+  return probePullRequest($, await $.session.cwd(), ref);
+}
+
+// turn の終わりの PR の状態を基準にし、その turn が push した変更を外部からの変化として扱わない
+async function recordBaseline($: EngineInterface): Promise<void> {
+  const { target } = await read($, memory);
+  const pr = await probeTarget($, target);
+  if (pr === null) {
+    return;
+  }
+  await update($, memory, (m) => (m.target === target ? { ...m, pr } : m));
+}
+
 async function judge($: EngineInterface, m: Memory): Promise<Verdict | null> {
   const entries = await read($, buffer);
   if (entries.length === 0) {
@@ -162,6 +191,10 @@ async function decide($: EngineInterface, isForced: boolean): Promise<string> {
   if (!isForced && now - m.lastActivityAt < IDLE_MS) {
     return "待機時間に達していない";
   }
+  const agents = await $.agent.list();
+  if (agents.some((agent) => BUSY_AGENT_STATUSES.has(agent.status))) {
+    return "動作中の agent があるので見送った";
+  }
 
   // 段 1: 直前の turn の結果だけで決める
   if (m.wasAborted) {
@@ -204,13 +237,13 @@ async function decide($: EngineInterface, isForced: boolean): Promise<string> {
   if (verdict === "WAIT_EXTERNAL" && !isPollDue) {
     return "PR の確認間隔に達していない";
   }
-  // session が main の worktree にいて、PR の branch が別の worktree にあるときは target の URL で引く
-  const pr =
-    (await probePullRequest($, cwd)) ??
-    (latest.target !== null && PR_URL.test(latest.target)
-      ? await probePullRequest($, cwd, latest.target)
-      : null);
-  await update($, memory, (one) => ({ ...one, lastPolledAt: now }));
+  const pr = await probeTarget($, latest.target);
+  // 番号で引いた PR は、以後 cwd の repository に左右されないよう URL で覚える
+  await update($, memory, (one) => ({
+    ...one,
+    lastPolledAt: now,
+    target: pr?.url ?? one.target,
+  }));
   if (pr !== null && pr.state === "OPEN" && verdict === "DONE") {
     verdict = "WAIT_EXTERNAL";
   }
@@ -222,7 +255,7 @@ async function decide($: EngineInterface, isForced: boolean): Promise<string> {
     if (latest.isCleanupSent) {
       return stop($, "タスクが完了した");
     }
-    const items = await probeCleanup($, cwd);
+    const items = await probeCleanup($, await $.session.cwd());
     // 報告だけの候補のために turn を起こさない
     if (!items.some((item) => item.kind === "remove")) {
       for (const item of items) {
@@ -247,18 +280,6 @@ async function decide($: EngineInterface, isForced: boolean): Promise<string> {
   if (verdict === "WAIT_EXTERNAL") {
     if (pr === null) {
       return stop($, "PR 以外の待ちは監視の対象外");
-    }
-    // 直前の自動投稿の turn が push した変更を、外部からの変化として扱わない
-    if (latest.lastStatus === "changed") {
-      await update($, memory, (one) => ({
-        ...one,
-        verdict,
-        pr,
-        lastStatus: "waiting" as const,
-      }));
-      await show($);
-
-      return "自分の変更後の PR の状態を基準として記録した";
     }
     const changes = describeChanges(latest.pr, pr);
     if (changes.length === 0) {
@@ -301,7 +322,6 @@ async function tick($: EngineInterface, isForced: boolean): Promise<string> {
 export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
     const result = await next(e);
-    cwd = result.cwd;
     await $.command.register({
       name: "auto-continue",
       description: "auto-continue の操作: on | off | status | now",
@@ -362,13 +382,19 @@ export const register: Register = (on) => {
     if (e.answer !== "") {
       await append($, { role: "assistant", text: e.answer });
     }
+    const target = parseTarget(e.answer);
     await update($, memory, (m) => ({
       ...m,
       lastActivityAt: now,
       wasAborted: e.isAborted,
       // STATUS 行が無い turn は null にして Haiku の判定に回す
       lastStatus: parseStatus(e.answer),
+      target: target === undefined ? m.target : target,
     }));
+    // gh の応答を待って turn の終わりを遅らせないよう、基準の記録は待たない
+    void recordBaseline($).catch((error: unknown) =>
+      $.ui.log(`auto-continue: ${String(error)}`),
+    );
 
     return result;
   });

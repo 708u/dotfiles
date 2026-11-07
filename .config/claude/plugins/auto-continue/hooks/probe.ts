@@ -37,13 +37,13 @@ export function summarizeChecks(
 export async function probePullRequest(
   $: EngineInterface,
   cwd: string,
-  ref?: string,
+  ref: string,
 ): Promise<PrSnapshot | null> {
   const out = await run($, cwd, [
     "gh",
     "pr",
     "view",
-    ...(ref === undefined ? [] : [ref]),
+    ref,
     "--json",
     "number,url,state,reviewDecision,mergeStateStatus,headRefOid,reviews,comments,statusCheckRollup",
   ]);

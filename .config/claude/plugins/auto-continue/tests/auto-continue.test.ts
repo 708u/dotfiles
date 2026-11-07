@@ -1,5 +1,5 @@
 import { expect, mock, test } from "claude-code/testing";
-import type { On } from "claude-code";
+import type { AgentInfo, On } from "claude-code";
 
 import { parseWorktrees } from "../hooks/probe";
 import {
@@ -8,7 +8,9 @@ import {
   buildJudgePrompt,
   describeChanges,
   parseJudge,
+  parsePrRef,
   parseStatus,
+  parseTarget,
 } from "../hooks/prompts";
 import type { PrSnapshot } from "../types";
 
@@ -40,8 +42,12 @@ type World = {
   pr: Record<string, unknown> | null;
   worktrees: string;
   closed: unknown[];
-  // session の作業 directory の branch には PR が無く、URL を渡したときだけ引ける状態
-  isPrOnlyByUrl?: boolean;
+  target: string | null;
+  // gh pr view に渡された PR の URL か番号
+  viewed: string[];
+  // 他の PR は番号 (URL の末尾) で引ける
+  others: Record<string, Record<string, unknown>>;
+  agents: AgentInfo[];
 };
 
 function world(on: On, initial: Partial<World> = {}): World {
@@ -62,11 +68,17 @@ function world(on: On, initial: Partial<World> = {}): World {
     },
     worktrees: "",
     closed: [],
+    target: PR.url,
+    viewed: [],
+    others: {},
+    agents: [],
     ...initial,
   };
 
   on("command.register", () => ({ value: { command: "auto-continue" } }));
   on("session.start", (_, e) => ({ cwd: e.cwd }));
+  on("session.cwd", () => ({ value: "/repo" }));
+  on("agent.list", () => ({ value: state.agents }));
   on("turn.complete", (_, e) => ({ text: e.answer }));
   on("ui.status", () => ({ value: undefined }));
   on("ui.log", () => ({ value: undefined }));
@@ -84,7 +96,7 @@ function world(on: On, initial: Partial<World> = {}): World {
         text: JSON.stringify({
           summary: "PR を作成し、レビューを待っている",
           verdict: state.verdict,
-          target: PR.url,
+          target: state.target,
         }),
         usage: USAGE,
       },
@@ -102,8 +114,17 @@ function world(on: On, initial: Partial<World> = {}): World {
       },
     });
     if (command === "gh pr view") {
-      const isByUrl = e.argv[3]?.startsWith("https://") ?? false;
-      if (state.pr === null || (state.isPrOnlyByUrl === true && !isByUrl)) {
+      const ref = e.argv[3] ?? "";
+      // 引数なしは current branch の PR を引くため、mod から呼ばれてはならない
+      if (ref.startsWith("--")) {
+        throw new Error("gh pr view が PR を指定せずに呼ばれた");
+      }
+      state.viewed.push(ref);
+      const other = state.others[ref.split("/").at(-1) ?? ""];
+      if (other !== undefined) {
+        return out(JSON.stringify(other));
+      }
+      if (state.pr === null || !(ref === PR.url || ref === "12")) {
         return out("", 1);
       }
 
@@ -320,9 +341,9 @@ test("自動投稿の turn が push した変更では次の投稿をしない",
   expect(state.submitted[1]).not.toContain("head の commit");
 });
 
-test("作業 directory に PR が無いときは判定結果の URL で PR を引く", async ($, on) => {
+test("判定結果が PR の番号だけでも、その PR を引いて以後は URL で引く", async ($, on) => {
   const clock = mock.clock(on);
-  const state = world(on, { isPrOnlyByUrl: true });
+  const state = world(on, { target: "PR #12" });
   await $.session.start({
     cwd: "/repo",
     surface: "terminal",
@@ -333,6 +354,116 @@ test("作業 directory に PR が無いときは判定結果の URL で PR を�
   await clock.advance(31 * MINUTE);
   expect(state.submitted).toHaveLength(1);
   expect(state.submitted[0]).toContain("PR: #12");
+  expect(state.viewed[0]).toBe("12");
+
+  await $.turn.complete(turn("レビューはまだありません。\nSTATUS: waiting"));
+  await clock.advance(1 * MINUTE);
+  expect(state.viewed.at(-1)).toBe(PR.url);
+});
+
+test("PR を待っていない判定なら PR を引かず、監視の対象外として止まる", async ($, on) => {
+  const clock = mock.clock(on);
+  const state = world(on, { target: null });
+  await $.session.start({
+    cwd: "/repo",
+    surface: "terminal",
+    isInteractive: true,
+  });
+
+  await $.turn.complete(turn("deploy の完了を待っています。"));
+  await clock.advance(31 * MINUTE);
+  expect(state.viewed).toEqual([]);
+  expect(state.submitted).toHaveLength(0);
+});
+
+test("動作中の agent があるあいだは判定も投稿もしない", async ($, on) => {
+  const clock = mock.clock(on);
+  const agent: AgentInfo = {
+    id: "a1",
+    description: "PR を作る",
+    type: "general-purpose",
+    status: "running",
+  };
+  const state = world(on, { verdict: "CONTINUE", agents: [agent] });
+  await $.session.start({
+    cwd: "/repo",
+    surface: "terminal",
+    isInteractive: true,
+  });
+
+  await $.turn.complete(turn("subagent に任せました。終わったら報告します。"));
+  await clock.advance(60 * MINUTE);
+  expect(state.judged).toBe(0);
+  expect(state.submitted).toHaveLength(0);
+
+  state.agents = [{ ...agent, status: "completed" }];
+  await clock.advance(1 * MINUTE);
+  expect(state.submitted).toHaveLength(1);
+});
+
+test("自動投稿の turn が返した TARGET 行で監視する PR を切り替える", async ($, on) => {
+  const clock = mock.clock(on);
+  const other = "https://github.com/example/repo/pull/34";
+  const state = world(on, {
+    others: {
+      "34": {
+        ...PR,
+        number: 34,
+        url: other,
+        headRefOid: PR.headSha,
+        reviews: [],
+        comments: [],
+        statusCheckRollup: [],
+      },
+    },
+  });
+  await $.session.start({
+    cwd: "/repo",
+    surface: "terminal",
+    isInteractive: true,
+  });
+
+  await $.turn.complete(
+    turn("PR #12 を作成しました。レビューを待っています。"),
+  );
+  await clock.advance(31 * MINUTE);
+  expect(state.submitted).toHaveLength(1);
+
+  await $.turn.complete(
+    turn(`#12 は別の作業の PR でした。\nTARGET: ${other}\nSTATUS: waiting`),
+  );
+  await clock.advance(1 * MINUTE);
+  expect(state.viewed.at(-1)).toBe(other);
+
+  state.others["34"] = { ...state.others["34"], comments: [{}] };
+  await clock.advance(40 * MINUTE);
+  expect(state.submitted).toHaveLength(2);
+  expect(state.submitted[1]).toContain(`PR: #34 ${other}`);
+});
+
+test("TARGET 行と PR の参照を読み取る", () => {
+  expect(
+    parseTarget("報告\nTARGET: https://github.com/o/r/pull/1\nSTATUS: waiting"),
+  ).toBe("https://github.com/o/r/pull/1");
+  expect(parseTarget("報告\n**TARGET:** none\nSTATUS: done")).toBe(null);
+  expect(parseTarget("報告\nSTATUS: done")).toBe(undefined);
+  expect(parsePrRef("https://github.com/o/r/pull/1/files")).toBe(
+    "https://github.com/o/r/pull/1",
+  );
+  expect(parsePrRef("PR #29194")).toBe("29194");
+  expect(parsePrRef("staging への deploy")).toBe(null);
+});
+
+test("対応が要らない CI の進行と merge 可否の再計算は変化として扱わない", () => {
+  expect(
+    describeChanges(
+      { ...PR, checks: "PENDING:2", mergeStateStatus: "UNKNOWN" },
+      { ...PR, checks: "SUCCESS:3", mergeStateStatus: "CLEAN" },
+    ),
+  ).toEqual([]);
+  expect(describeChanges(PR, { ...PR, mergeStateStatus: "BEHIND" })).toEqual([
+    "mergeStateStatus: BLOCKED → BEHIND",
+  ]);
 });
 
 test("判定の入力は最後の返答を分け、ユーザー以外の入力を event として渡す", () => {
@@ -340,7 +471,10 @@ test("判定の入力は最後の返答を分け、ユーザー以外の入力�
   const last =
     "1 分ほど何もしないでいると、判定が走ります。確認が終わったら値を 30 分に戻します。";
   const prompt = buildJudgePrompt("", [
-    { role: "event", text: "The person enabled mod hot-reloading for this session" },
+    {
+      role: "event",
+      text: "The person enabled mod hot-reloading for this session",
+    },
     { role: "assistant", text: "mod が読み込まれました。" },
     { role: "user", text: "1分にかえてテスト" },
     { role: "assistant", text: last },
@@ -349,5 +483,7 @@ test("判定の入力は最後の返答を分け、ユーザー以外の入力�
   expect(prompt).toContain("[event]\nThe person enabled mod hot-reloading");
   expect(prompt).toContain(`<last_assistant>\n${last}\n</last_assistant>`);
   expect(prompt.split(last)).toHaveLength(2);
-  expect(JUDGE_SYSTEM).toContain("「確認が終わったら〜する」のように、ユーザー側の出来事を条件とする予告は WAIT_USER とする");
+  expect(JUDGE_SYSTEM).toContain(
+    "「確認が終わったら〜する」のように、ユーザー側の出来事を条件とする予告は WAIT_USER とする",
+  );
 });
