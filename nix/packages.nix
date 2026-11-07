@@ -30,6 +30,7 @@
     go_1_27
     gogcli
     goku
+    golangci-lint
     graphviz
     grpcurl
     herdr
