@@ -27,6 +27,7 @@
     git
     git-lfs
     gnugrep
+    go_1_27
     gogcli
     goku
     graphviz
