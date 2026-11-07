@@ -74,13 +74,13 @@ async function append($: EngineInterface, entry: Entry): Promise<void> {
 async function show($: EngineInterface): Promise<void> {
   const m = await read($, memory);
   if (!m.isEnabled) {
-    $.ui.status("auto-continue: off");
+    $.ui.status("off");
   } else if (m.stoppedReason !== null) {
-    $.ui.status(`auto-continue: 停止 (${m.stoppedReason})`);
+    $.ui.status(`停止 (${m.stoppedReason})`);
   } else if (m.verdict === "WAIT_EXTERNAL" && m.pr !== null) {
-    $.ui.status(`auto-continue: PR #${m.pr.number} を監視中`);
+    $.ui.status(`PR #${m.pr.number} を監視中`);
   } else {
-    $.ui.status("auto-continue: 待機中");
+    $.ui.status("待機中");
   }
 }
 
