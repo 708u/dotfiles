@@ -63,6 +63,7 @@
     vscode
     wget
     yarn
+    yazi
     zellij
     zoxide
     zsh
