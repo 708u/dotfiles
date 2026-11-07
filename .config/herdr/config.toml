@@ -83,7 +83,8 @@ prefix = ["ctrl+a", "cmd+j"]
 # cmux の shortcut に寄せる。既定の割り当てと重なるキーは既定の側が警告なしに無効になるため、押し出した操作も移す
 split_vertical = "prefix+d"
 split_horizontal = "prefix+shift+d"
-new_workspace = "prefix+n"
+# prefix+n は現在のディレクトリと ghq の repository を選ぶ popup に使う
+new_workspace = "prefix+shift+n"
 close_pane = "prefix+w"
 close_workspace = "prefix+shift+w"
 workspace_picker = "prefix+p"
@@ -190,6 +191,48 @@ description = "jump to local blocked or done agent"
 command = '''
 p=$("$HERDR_BIN_PATH" agent list | jq -r '[.result.agents[] | select((.agent_status == "blocked" or .agent_status == "done") and (.focused | not))] | max_by([(.agent_status == "blocked"), .state_change_seq]) | .pane_id // empty')
 if [ -n "$p" ]; then "$HERDR_BIN_PATH" agent focus "$p"; fi
+'''
+
+# 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。
+# 先頭の現在のディレクトリは new_workspace と同じく常に新しく作る。
+# repository は既存の workspace があればそこへ移動し、ctrl-o のときは常に新しく作る。
+# ghq root 配下に置いた linked worktree も ghq list に出るため、.git がディレクトリのものだけを候補にする。
+# /bin/sh は bash 3.2 で、$( ) 内の case のパターンを ) で閉じると構文エラーになるため ( から書く
+[[keys.command]]
+key = "prefix+n"
+type = "popup"
+width = "80%"
+height = "60%"
+description = "open workspace from current directory or ghq repository"
+command = '''
+root=$(ghq root)
+cwd=${HERDR_ACTIVE_PANE_CWD:-$PWD}
+open=$("$HERDR_BIN_PATH" workspace list | jq -r '[.result.workspaces[].worktree.checkout_path // empty | "|" + . + "|"] | join("")')
+# 種別、パス、表示の 3 列を tab 区切りで渡し、fzf には表示の列だけを見せる
+items=$(
+  printf 'cwd\t%s\t+ %s\n' "$cwd" "$cwd"
+  ghq list | while IFS= read -r r; do
+    [ -d "$root/$r/.git" ] || continue
+    case "$open" in (*"|$root/$r|"*) printf 'repo\t%s\t* %s\n' "$root/$r" "$r" ;; esac
+  done
+  ghq list | while IFS= read -r r; do
+    [ -d "$root/$r/.git" ] || continue
+    case "$open" in (*"|$root/$r|"*) ;; (*) printf 'repo\t%s\t  %s\n' "$root/$r" "$r" ;; esac
+  done
+)
+out=$(printf '%s\n' "$items" | fzf --prompt 'workspace> ' --delimiter '\t' --with-nth 3 --tiebreak index --expect ctrl-o \
+  --header 'enter: 開く (* は既存の workspace へ移動) / ctrl-o: 新しく作る') || exit 0
+key=$(printf '%s\n' "$out" | sed -n 1p)
+kind=$(printf '%s\n' "$out" | sed -n 2p | cut -f1)
+dir=$(printf '%s\n' "$out" | sed -n 2p | cut -f2)
+[ -n "$dir" ] || exit 0
+if [ "$kind" = repo ] && [ "$key" != ctrl-o ]; then
+  id=$("$HERDR_BIN_PATH" workspace list | jq -r --arg d "$dir" '[.result.workspaces[] | select(.worktree.checkout_path == $d)][0].workspace_id // empty')
+  if [ -n "$id" ]; then
+    exec "$HERDR_BIN_PATH" workspace focus "$id"
+  fi
+fi
+exec "$HERDR_BIN_PATH" workspace create --cwd "$dir" --label "$(basename "$dir")" --focus
 '''
 
 # Legacy indexed shortcut config is still parsed for compatibility.
