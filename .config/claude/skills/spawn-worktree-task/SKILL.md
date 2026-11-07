@@ -1,11 +1,11 @@
 ---
-name: herdr-spawn-worktree-task
+name: spawn-worktree-task
 description: >-
   セッションの文脈から別の作業を切り出し、新しい worktree の herdr workspace で Claude Code を起動して prompt を渡す。「worktree で別タスクを始めて」「この作業を別の Claude に任せて」「spawn worktree」で使用。
 argument-hint: "[branch-name] [指示内容...] [with /command...]"
 ---
 
-# herdr-spawn-worktree-task
+# spawn-worktree-task
 
 指示書やセッションの文脈をもとにpromptを作成し、ファイルに書き出す。worktreeの作成からClaude Codeの起動、promptの送信までは `scripts/spawn.sh` が行う。
 
@@ -16,7 +16,7 @@ argument-hint: "[branch-name] [指示内容...] [with /command...]"
 - ブランチ名は指定がなければ自動推察する
 - 指示内容は指定がなければセッションの文脈から推察する
 - `with /command` 形式でコマンドを指定すると、prompt内でそのコマンドを呼び出す
-  - 例: `/herdr-spawn-worktree-task feat/new with /prepare-pr`
+  - 例: `/spawn-worktree-task feat/new with /prepare-pr`
   - 複数指定可: `with /command1 /command2`
 
 ## コンテキスト
@@ -240,7 +240,7 @@ preRunや完了時の手順に以下のコマンドを含める場合は、必�
 ### 5. worktreeの作成とClaude Codeの起動
 
 ```bash
-~/.claude/skills/herdr-spawn-worktree-task/scripts/spawn.sh [--pre-run '<preRun>'] [--source <派生元ブランチ>] <branch-name> <promptファイルの絶対パス>
+~/.claude/skills/spawn-worktree-task/scripts/spawn.sh [--pre-run '<preRun>'] [--source <派生元ブランチ>] <branch-name> <promptファイルの絶対パス>
 ```
 
 scriptは次の処理を行う。
@@ -272,13 +272,13 @@ promptをコマンドの引数 (`claude '<prompt>'`) で渡さないのは、mac
 
 ```bash
 # 自動推察でブランチ名と指示を決定
-/herdr-spawn-worktree-task
+/spawn-worktree-task
 
 # ブランチ名を指定
-/herdr-spawn-worktree-task feat/new-feature
+/spawn-worktree-task feat/new-feature
 
 # ブランチ名と指示内容を指定
-/herdr-spawn-worktree-task feat/new-feature "ユーザー認証機能を実装してください"
+/spawn-worktree-task feat/new-feature "ユーザー認証機能を実装してください"
 ```
 
 $ARGUMENTS
