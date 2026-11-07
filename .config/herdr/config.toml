@@ -427,6 +427,8 @@ claude = [
     { token = "$ctx_low", fg = "#98c379" },
     { token = "$ctx_mid", fg = "#e5c07b" },
     { token = "$ctx_high", fg = "#e06c75" },
+    # 動いている subagent の数。Claude Code の SubagentStart / SubagentStop hook から送る
+    { token = "$subagents", fg = "#61afef" },
   ],
 ]
 
