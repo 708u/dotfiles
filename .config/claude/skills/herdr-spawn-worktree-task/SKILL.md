@@ -1,14 +1,15 @@
 ---
-description: 指示を元にpromptを作成し、worktreeを作成してherdrのworkspaceでClaude Codeを起動する
-allowed-tools: Bash(twig add:*), Bash(herdr:*), Bash(jq:*), Bash(git submodule:*)
-argument-hint: [branch-name] [指示内容...] [with /command...]
+name: herdr-spawn-worktree-task
+description: >-
+  セッションの文脈から別の作業を切り出し、新しい worktree の herdr workspace で Claude Code を起動して prompt を渡す。「worktree で別タスクを始めて」「この作業を別の Claude に任せて」「spawn worktree」で使用。
+argument-hint: "[branch-name] [指示内容...] [with /command...]"
 ---
 
 # herdr-spawn-worktree-task
 
-指示書やセッションの文脈を元にpromptを作成し、`twig add`で新しいworktreeを作成する。herdrでそのworktreeのworkspaceを作成してClaude Codeを起動し、promptを送信する。
+指示書やセッションの文脈をもとにpromptを作成し、ファイルに書き出す。worktreeの作成からClaude Codeの起動、promptの送信までは `scripts/spawn.sh` が行う。
 
-このコマンドは複数同時に実行できる。worktree、workspace、agentの名前はいずれもブランチ名に基づいて決定するため、並列に実行しても衝突しない。
+このskillは複数同時に実行できる。worktree、workspace、agentの名前はいずれもブランチ名に基づいて決まるため、並列に実行しても衝突しない。
 
 ## 引数（すべてオプション）
 
@@ -19,12 +20,6 @@ argument-hint: [branch-name] [指示内容...] [with /command...]
   - 複数指定可: `with /command1 /command2`
 
 ## コンテキスト
-
-### twig CLI
-
-twigコマンドの使用方法を把握するため、以下のスキルを必ず実行すること
-
-/twig:twig-guide
 
 ### 現在のgit status
 
@@ -89,7 +84,7 @@ twigコマンドの使用方法を把握するため、以下のスキルを必�
 
 ### 3. promptの作成
 
-指示内容を元に、新しいworktreeのClaude Codeへ送るpromptを作成する。promptはファイルに書き出さず、ステップ4で `herdr agent prompt` に直接渡す。
+指示内容を元に、新しいworktreeのClaude Codeへ送るpromptを作成する。
 
 **計画内容の取り扱い**:
 
@@ -169,36 +164,37 @@ promptの最後に、次の完了手順を必ず含める。
 
 **並列実行の判定（必須）**:
 
-promptの指示内容を確定した後、1つの問題を複数の独立した作業に分割できるか判定する。以下のいずれかに該当すればAgent Team（TeamCreate + Task）による並列実行を指示に含める。
+promptの指示内容を確定した後、1つの問題を複数の独立した作業に分割できるかを判定する。以下のいずれかに該当すれば、agent teamsによる並列実行を指示に含める。agent teamsは環境変数 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` で有効にする実験的な機能であり、有効でない環境では並列実行を指示に含めない。
 
 判定基準:
 
 - 互いに依存しない独立したサブタスクが2つ以上ある
   - 例: テスト作成とドキュメント作成
   - 例: フロントエンドとバックエンドの独立した変更
-- 同一作業でも編集対象ファイルを分割できる
-  - 例: 複数ファイルへの同種修正をファイル単位で分担
-  - 例: 各モジュールへの型定義追加
+- 同一作業でも編集対象のファイルを分割できる
+  - 例: 複数ファイルへの同種の修正をファイル単位で分担
+  - 例: 各モジュールへの型定義の追加
 
 該当する場合は、claudeへの指示に次の内容を含める。
 
-1. TeamCreateでチームを作成する
-2. Taskで各サブタスクをチームメイトに委譲する
-3. 全チームメイトの完了を待ち、整合性を確認する
+1. サブタスクごとにteammateを起動して委譲する
+2. サブタスク間に依存関係がある場合は、タスクリストで依存関係を設定する
+3. 全teammateの完了を待ち、整合性を確認する
 4. 整合性の確認後にcommitする
-5. 依存関係がある場合はaddBlockedByで管理する
+
+使うtoolの名前はClaude Codeのバージョンによって変わるため、promptにはtool名を書かず、機能の名前で指示する。
 
 ```txt
-例: Agent Teamで並列実行するprompt
+例: agent teamsで並列実行するprompt
 
-以下のタスクをAgent Teamで並列実行してください。
+以下のタスクをagent teamsで並列実行してください。
 
 ## 概要
 ユーザー管理機能を実装する。
 
 ## 並列実行の指示
-TeamCreateでチームを作成し、以下のサブタスクを
-それぞれTaskでチームメイトに委譲してください。
+以下のサブタスクごとにteammateを起動し、
+それぞれ委譲してください。
 
 ### サブタスク1: APIエンドポイントの実装
 @src/api/users.ts を新規作成し、
@@ -209,8 +205,8 @@ GET /users と POST /users を実装する。
 ユーザー一覧表示コンポーネントを実装する。
 
 ## 完了条件
-- 全チームメイトの完了を待ち整合性を確認する
-- 依存関係がある場合はaddBlockedByで管理
+- 全teammateの完了を待ち整合性を確認する
+- 依存関係がある場合はタスクリストで依存関係を設定する
 - 整合性確認後にcommitする
 
 完了したら:
@@ -220,10 +216,11 @@ GET /users と POST /users を実装する。
 
 **PRの向き先**:
 
-ユーザーが明示的にsource branchを指定してworktreeを作成する場合のみ適用:
+ユーザーが明示的にsource branchを指定してworktreeを作成する場合のみ、次のように扱う。
 
 - PRの向き先は指定された派生元ブランチにする
 - 指示内にbase branchを明記すること
+- ステップ5でscriptに `--source <派生元ブランチ>` を渡す。派生元ブランチはworktreeとしてcheckoutされている必要がある
 - 例: 「`feat/base`から派生」と指定された場合、PRは`feat/base`に向けて作成する
 - source指定がない場合（デフォルト）はmainに向けてPRを作成する
 
@@ -233,95 +230,43 @@ preRunや完了時の手順に以下のコマンドを含める場合は、必�
 - `git reset --hard`, `git clean -f`
 - その他破壊的な操作
 
-### 4. worktreeの作成とClaude Codeの起動
+### 4. promptの書き出し
 
-herdrのpane内（`HERDR_ENV=1`）で実行していない場合は、worktreeを作成した後にパスとpromptをユーザーに報告して終了する。
+ステップ3で作成したpromptを、Writeでセッションのscratchpad directoryに書き出す。scratchpad directoryが無い環境では `/tmp` を使う。
 
-herdrのコマンドはJSONを返す。以下のステップを順番に実行し、各コマンドの出力から読み取った値を次のコマンドの引数に直接指定すること。変数への代入は禁止。
+- ファイル名は `spawn-prompt-<workspace-name>.txt` とする。workspace名はブランチ名の `/` を `-` に置換した名前である
+- 拡張子は `.md` にしない。markdown向けのlintがpromptの文面にも指摘を出すため
 
-#### 4.1 worktreeの作成
-
-```bash
-twig add <branch-name> -q
-```
-
-`-q` オプションで、作成されたworktreeのパスが出力される。
-
-#### 4.2 trust dialogのスキップ
-
-新しいworktreeでClaude Codeを起動するとtrust dialogが表示され、promptを受け付けない。これを避けるため、`~/.claude.json` にworktreeのtrust設定を追加する。既存の設定を保持し、trust関連のフラグのみ更新する。
+### 5. worktreeの作成とClaude Codeの起動
 
 ```bash
-jq --arg path "/path/to/worktree" '
-  .projects //= {} |
-  .projects[$path] = ((.projects[$path] // {}) + {
-    "hasTrustDialogAccepted": true,
-    "hasTrustDialogHooksAccepted": true,
-    "projectOnboardingSeenCount": 1,
-    "hasClaudeMdExternalIncludesApproved": true,
-    "hasClaudeMdExternalIncludesWarningShown": true,
-    "hasCompletedProjectOnboarding": true
-  })
-' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+~/.claude/skills/herdr-spawn-worktree-task/scripts/spawn.sh [--pre-run '<preRun>'] [--source <派生元ブランチ>] <branch-name> <promptファイルの絶対パス>
 ```
 
-#### 4.3 workspaceの作成
+scriptは次の処理を行う。
 
-`herdr worktree open` でworktreeのworkspaceを作成する。`--cwd` に呼び出し元のリポジトリを指定すると、作成されたworkspaceは呼び出し元と同じリポジトリのworktreeとして紐づく。`--no-focus` で呼び出し元のフォーカスを維持する。
+1. `twig add` でworktreeを作成する。`--source` を指定した場合はtwigに渡す
+2. trust dialogが表示されないよう、`~/.claude.json` にworktreeを承認済みとして登録する
+3. `herdr worktree open` でworkspaceを作成する。フォーカスは呼び出し元に残る
+4. preRunを指定した場合は、workspaceのpaneで実行して終了を待つ
+5. `herdr agent start` でClaude Codeを `--permission-mode acceptEdits` で起動する
+6. `herdr agent prompt` でpromptファイルの内容を送る
 
-```bash
-herdr worktree open --cwd "$PWD" --path /path/to/worktree --label <workspace-name> --no-focus
-```
+promptをコマンドの引数 (`claude '<prompt>'`) で渡さないのは、macOSでは端末の1行あたりの入力上限 (1024 byte) を超えるコマンドを `herdr pane run` が拒否するためである。`herdr agent prompt` はbracketed pasteで送るため、この上限を受けない。
 
-`.result.root_pane.pane_id` がpaneのIDである。これを控えておく。paneのcwdはworktreeになっている。
+### 6. 結果の報告
 
-#### 4.4 preRunの実行
+出力の `status` で分岐する。
 
-preRunがある場合のみ実行する。終了コードを目印として表示し、表示されるまで待機する。
+| status | 意味 | 報告内容 |
+| --- | --- | --- |
+| `started` | Claude Codeにpromptを送った | ブランチ名、workspace、agent名 |
+| `no_herdr` | herdrのpane外で実行した。worktreeの作成までで終了した | worktreeのパスとpromptファイルのパス |
+| `pre_run_failed` | preRunが0以外で終了した | 終了コードと画面の末尾 |
+| `agent_not_ready` | Claude Codeの起動を確認できなかった | 画面の末尾 |
+| `error` | 引数の誤り、または途中の command の失敗 | 理由か失敗した command。worktree を作成したあとで失敗した場合は、残った worktree を片付けるか確認する |
 
-```bash
-herdr pane run <pane-id> '<preRun>; echo "PRERUN_EXIT=$?"'
-herdr pane wait-output <pane-id> --regex 'PRERUN_EXIT=[0-9]+' --timeout 600000
-```
-
-終了コードが0以外のときはClaude Codeを起動せず、`herdr pane read <pane-id> --source recent-unwrapped --lines 40` の内容をユーザーに報告して終了する。
-
-#### 4.5 Claude Codeの起動
-
-```bash
-herdr agent start <agent-name> --kind claude --pane <pane-id> -- --permission-mode acceptEdits
-```
-
-- `<agent-name>` はworkspace名を使う。agent名は `[a-z][a-z0-9_-]{0,31}` に一致し、起動中のagentの中で一意である必要がある。32文字を超える場合は切り詰め、既存のagent名と重複する場合は末尾に `-2` などを付ける
-- `--permission-mode acceptEdits` はsettings.jsonを変更せずにpermission modeを指定するため
-- `agent_not_ready` が返された場合は、`herdr agent read <agent-name> --source recent-unwrapped --lines 40` で画面を確認し、ユーザーに報告して終了する
-
-#### 4.6 promptの送信
-
-ステップ3で作成したpromptを `herdr agent prompt` で送信する。promptに引用符や改行が含まれても崩れないよう、引用符付きのヒアドキュメントで渡す。`--wait` は付けず、送信の完了を確認した時点で終了する。
-
-```bash
-herdr agent prompt <agent-name> "$(cat <<'PROMPT'
-<ステップ3で作成したprompt>
-PROMPT
-)"
-```
-
-`claude '<prompt>'` のようにpromptをコマンドの引数で渡す方法は使用しない。macOSでは端末の1行入力の上限 (1024 byte) を超えるコマンドを `herdr pane run` が拒否するため、計画の全文を含むpromptを送れない。`herdr agent prompt` はbracketed pasteで送信するため、この上限を受けない。
-
-**workspace名の命名規則**:
-
-- ブランチ名の `/` を `-` に置換した名前を使用する
-- prefixは不要。作業内容が一目で分かる名前にする
-- 例: `feat/add-user-auth` → `feat-add-user-auth`
-- 例: `fix/null-pointer` → `fix-null-pointer`
-- 例: `refactor/config-loader` → `refactor-config-loader`
-
-このコマンドを実行すると、次の状態になる。
-
-- herdrに新しいworkspaceが作成される
-- worktreeでClaude Codeが起動し、promptを受け取って作業を開始する
-- workspace名とagent名から作業内容を一目で識別できる
+`error` の原因が `herdr agent prompt` の場合、promptが届いていないとは限らない。再送する前に `herdr agent read <agent名> --source recent-unwrapped --lines 40` で画面を確認する。
 
 ## 例
 
