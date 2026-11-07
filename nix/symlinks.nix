@@ -47,8 +47,10 @@ in
   };
 
   home.file = {
+    # Claude Code は AGENTS.md を project の指示としてのみ読み込むため、
+    # user 単位の指示は CLAUDE.md の名前で配置する
     ".claude/CLAUDE.md" = {
-      source = mkSymlink ".config/claude/CLAUDE.md";
+      source = mkSymlink ".config/claude/AGENTS.md";
     };
     # NOTE: .claude/settings.json は symlink 管理しない。Claude Code が
     # 一時ファイルの rename で書くため symlink がファイルごと消え、

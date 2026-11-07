@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code)
+This file provides guidance to coding agents
 when working with code in this repository.
 
 ## Commands
@@ -42,15 +42,15 @@ zsh/                # Zinit 経由で source されるシェル設定
 
 ### ホストごとの設定
 
-`flake.nix` の `mkDarwin` が共通の module を組み立て、
+`flake.nix` の `mkDarwin` が共通 module を組み立て、
 ホストごとの module を `extraModules` で追加する。
 
-- **708uMacBookPro**: メインマシン。共通の module のみ
-- **708uServer**: Claude Code を常時稼働させる server 用マシン。
-  `server.nix` でスリープを無効にし、それ以外は省電力に寄せる。
-  `batt` で充電上限を固定する
+| ホスト | 用途と設定 |
+| --- | --- |
+| 708uMacBookPro | メインマシン。共通の module のみ |
+| 708uServer | Claude Code を常時稼働させる server 用マシン。`server.nix` でスリープを無効にし、それ以外は省電力の設定にする。`batt` で充電上限を固定する |
 
-ホスト固有の設定は `server.nix` のようなホスト専用の module に書く。
+ホスト固有の設定は `server.nix` のようなホスト専用の module に記述する。
 list 型のオプション (`homebrew.brews` など) は共通の module と連結される。
 
 ### パッケージ管理の使い分け
@@ -77,17 +77,15 @@ nix store 経由の二段階 symlink を作成する。
 `~/.claude/skills` はディレクトリごとリンクせず、
 `symlinks.nix` が skill ごとに配置する。入手元ごとの管理方法:
 
-- **自作**: `.config/claude/skills/` に置く。
-  新しい skill は git add してから `make apply` するまで配置されない
-- **plugin として配布されているもの**: Claude Code の plugin で管理する
-- **nix で入れたツールに付属するもの**: `externalSkills` に
-  パッケージのソース内のパスを指定し、本体とバージョンを揃える
-- **GitHub で公開されている単体の skill**: flake input
-  (`flake = false`) で取得し、`externalSkills` に追加する。
-  home-manager に `inputs` を渡す必要がある
+| 入手元 | 管理方法 |
+| --- | --- |
+| 自作 | `.config/claude/skills/` に置く。新しい skill は git add してから `make apply` するまで配置されない |
+| plugin として配布されているもの | Claude Code の plugin で管理する |
+| nix で入れたツールに付属するもの | `externalSkills` にパッケージのソース内のパスを指定し、本体とバージョンを揃える |
+| GitHub で公開されている単体の skill | flake input (`flake = false`) で取得し、`externalSkills` に追加する。home-manager に `inputs` を渡す必要がある |
 
 claude.ai からの同期などツールが書き込む skill は
-`~/.claude/skills` に直接作られ、リポジトリには入らない。
+`~/.claude/skills` に直接作成され、リポジトリには入らない。
 
 ### zsh 設定の構造
 
