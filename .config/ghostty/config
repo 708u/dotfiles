@@ -13,7 +13,8 @@ shell-integration-features = no-cursor
 
 keybind = super+left_bracket=goto_split:left
 keybind = super+right_bracket=goto_split:right
-# herdr の focus_agent は 1..9 にしか割り当てられないため、ctrl+a → a を ctrl+a → 1 の入力に置き換え、
-# 人の対応を最も急ぐ agent へ移動する。2 打鍵目が a 以外なら ctrl+a ごとそのまま herdr に届く。
+# herdr の focus_agent は 1..9 にしか割り当てられないため、ctrl+a → a と ctrl+a → g を ctrl+a → 1 の入力に置き換え、
+# 人の対応を最も急ぐ agent へ移動する。2 打鍵目がそれ以外なら ctrl+a ごとそのまま herdr に届く。
 # cmd+j を sequence にすると herdr が prefix として受け取らなくなるため、ctrl+a だけを対象にする
 keybind = ctrl+a>a=text:\x011
+keybind = ctrl+a>g=text:\x011

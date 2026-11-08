@@ -180,19 +180,6 @@ next_workspace = "prefix+period"
 # width = "80%"
 # height = "80%"
 
-# このマシンの server にいる agent だけを対象に、人の対応を待つ agent へ移動する。
-# 状態は server の判定を使うため、client の Done 表示と一致しないことがある。
-# 応答待ち (blocked) を未読の完了 (done) より優先し、同じ状態なら最も新しく変わったものを選ぶ。
-# 表示中の agent を候補から外すため、続けて押すと順に回る
-[[keys.command]]
-key = "prefix+g"
-type = "shell"
-description = "jump to local blocked or done agent"
-command = '''
-p=$("$HERDR_BIN_PATH" agent list | jq -r '[.result.agents[] | select((.agent_status == "blocked" or .agent_status == "done") and (.focused | not))] | max_by([(.agent_status == "blocked"), .state_change_seq]) | .pane_id // empty')
-if [ -n "$p" ]; then "$HERDR_BIN_PATH" agent focus "$p"; fi
-'''
-
 # 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。
 # 先頭の現在のディレクトリは new_workspace と同じく常に新しく作る。
 # repository は既存の workspace があればそこへ移動し、ctrl-o のときは常に新しく作る。
