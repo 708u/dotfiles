@@ -13,8 +13,12 @@ shell-integration-features = no-cursor
 
 keybind = super+left_bracket=goto_split:left
 keybind = super+right_bracket=goto_split:right
-# herdr の focus_agent は 1..9 にしか割り当てられないため、ctrl+a → a と ctrl+a → g を ctrl+a → 1 の入力に置き換え、
-# 人の対応を最も急ぐ agent へ移動する。2 打鍵目がそれ以外なら ctrl+a ごとそのまま herdr に届く。
-# cmd+j を sequence にすると herdr が prefix として受け取らなくなるため、ctrl+a だけを対象にする
-keybind = ctrl+a>a=text:\x011
-keybind = ctrl+a>g=text:\x011
+# herdr の focus_agent は 1..9 にしか割り当てられないため、prefix の直後の 1 キーだけを key table で読み替え、
+# a と g を 1 として送って人の対応を最も急ぐ agent へ移動する。prefix 自体は unconsumed でそのまま herdr に届く。
+# herdr は kitty keyboard protocol を使い、生の文字 1 は受け付けないため、1 の key press を kitty 形式 (CSI 49 u) で送る。
+# それ以外のキーは catch_all が unconsumed で素通しし、one-shot の table はその時点で閉じる
+keybind = unconsumed:ctrl+a=activate_key_table_once:herdr-prefix
+keybind = unconsumed:cmd+j=activate_key_table_once:herdr-prefix
+keybind = herdr-prefix/a=text:\x1b[49u
+keybind = herdr-prefix/g=text:\x1b[49u
+keybind = herdr-prefix/unconsumed:catch_all=deactivate_key_table
