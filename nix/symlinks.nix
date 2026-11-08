@@ -44,6 +44,9 @@ in
     "herdr/config.toml" = {
       source = mkSymlink ".config/herdr/config.toml";
     };
+    "herdr-automatic-rename/config.sh" = {
+      source = mkSymlink ".config/herdr-automatic-rename/config.sh";
+    };
   };
 
   home.file = {

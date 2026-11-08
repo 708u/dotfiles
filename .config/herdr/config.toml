@@ -312,6 +312,8 @@ sidebar_max_width = 60
 # Ask for a tab name before creating a new tab.
 # Set false to create tabs immediately with generated names.
 # prompt_new_tab_name = true
+# 入力した名前は手動の改名と扱われ、herdr-automatic-rename が自動で命名しなくなるため無効にする
+prompt_new_tab_name = false
 
 # Ask for a workspace name before interactive creation.
 # prompt_new_workspace_name = false

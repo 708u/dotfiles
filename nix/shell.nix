@@ -50,6 +50,15 @@
         source $ZSH_CONF_DIR/zsh/p10k.zsh
         source $ZSH_CONF_DIR/zsh/fzf.zsh
       ''
+      # herdr-automatic-rename の shell hook。plugin の install.sh は ~/.zshrc へ追記するが、
+      # home-manager 管理の ~/.zshrc は /nix/store への symlink で書き込めないためここで読み込む。
+      # (N) で plugin が無いマシンでは何もしない
+      (lib.mkAfter ''
+        for _f in $HOME/.config/herdr/plugins/github-installations/herdr-automatic-rename-*/*/checkout/shell/hook.zsh(N) \
+                  $HOME/.config/herdr/plugins/github/herdr-automatic-rename-*/shell/hook.zsh(N); do
+          source $_f; break
+        done
+      '')
     ];
   };
 
