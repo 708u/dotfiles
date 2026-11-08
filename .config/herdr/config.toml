@@ -185,7 +185,7 @@ next_workspace = "prefix+period"
 # 応答待ち (blocked) を未読の完了 (done) より優先し、同じ状態なら最も新しく変わったものを選ぶ。
 # 表示中の agent を候補から外すため、続けて押すと順に回る
 [[keys.command]]
-key = "prefix+a"
+key = "prefix+g"
 type = "shell"
 description = "jump to local blocked or done agent"
 command = '''
