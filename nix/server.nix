@@ -27,6 +27,22 @@
     StandardErrorPath = "/Users/${username}/Library/Logs/herdr-server.log";
   };
 
+  # このマシンは手元のマシンから remote で操作するため、シェルが OSC 11 を出して既定の背景色を変え、
+  # 手元のマシンの端末と見分けられるようにする。既定色へ戻すプログラムもあるため precmd で出し直す。
+  # ssh で直接つないだ端末では色が切断後も window に残るため、シェルの終了時に OSC 111 で既定色へ戻す
+  home-manager.users.${username}.programs.zsh.initContent = ''
+    _server_background() { printf '\e]11;#1e3034\e\\' }
+    _server_background_reset() { printf '\e]111\e\\' }
+    autoload -Uz add-zsh-hook
+    add-zsh-hook precmd _server_background
+    add-zsh-hook zshexit _server_background_reset
+  '';
+
+  # 更新のためにアプリを終了するパッケージがあり、remote 接続に使う Tailscale も終了したまま戻らないことがある。
+  # このマシンは常に remote で操作するため、apply では既存のパッケージを更新せず、未導入のものの追加だけを行う。
+  # NOTE: 更新は Makefile の UPGRADE_PACKAGES=1 で行い、Tailscale の再接続まで確認する
+  homebrew.onActivation.upgrade = lib.mkForce false;
+
   # 充電上限の制御は root の daemon が必要で、brew bundle の start_service では
   # 起動できないため、初回のみ手動で sudo brew services start batt && batt limit 80
   homebrew.brews = [ "batt" ];

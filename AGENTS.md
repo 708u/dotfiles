@@ -12,6 +12,10 @@ make apply
 # hostname が未設定のマシンへの初回適用
 make apply HOST=708uServer
 
+# 適用に加えて brew・cask・App Store のアプリを更新する。
+# Tailscale を更新したときは再接続まで確認する
+make apply UPGRADE_PACKAGES=1
+
 # Nix flake を更新
 make update
 
@@ -48,7 +52,7 @@ zsh/                # Zinit 経由で source されるシェル設定
 | ホスト | 用途と設定 |
 | --- | --- |
 | 708uMacBookPro | メインマシン。共通の module のみ |
-| 708uServer | Claude Code を常時稼働させる server 用マシン。`server.nix` でスリープを無効にし、それ以外は省電力の設定にする。`batt` で充電上限を固定する |
+| 708uServer | Claude Code を常時稼働させる server 用マシン。`server.nix` でスリープを無効にし、それ以外は省電力の設定にする。`batt` で充電上限を固定する。remote の接続を切らないよう、`make apply` では既存のパッケージを更新しない。更新は `UPGRADE_PACKAGES=1` で行う。対話シェルでは端末の背景色を変えて手元のマシンと見分ける |
 
 ホスト固有の設定は `server.nix` のようなホスト専用の module に記述する。
 list 型のオプション (`homebrew.brews` など) は共通の module と連結される。

@@ -28,6 +28,9 @@ make bootstrap
 # 設定の反映
 make apply
 
+# 設定の反映に加えて、brew・cask・App Store のアプリを更新する
+make apply UPGRADE_PACKAGES=1
+
 # flake の更新
 make update
 ```
