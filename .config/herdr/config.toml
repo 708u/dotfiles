@@ -239,6 +239,14 @@ exec "$HERDR_BIN_PATH" workspace create --cwd "$dir" --label "$label" --focus
 # workspaces = "" # e.g. "ctrl+shift" makes ctrl+shift+1..9 switch workspaces directly
 # agents = ""     # e.g. "alt" makes alt+1..9 focus agent rows directly
 
+[[keys.command]]
+key = "prefix+g"
+type = "popup"
+width = "95%"
+height = "95%"
+description = "open yazi in the current directory"
+command = 'exec yazi "${HERDR_ACTIVE_PANE_CWD:-$PWD}"'
+
 # Size of the virtual terminal used when no client is attached.
 # Attached clients always use their own terminal size.
 [server]
