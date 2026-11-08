@@ -257,7 +257,7 @@ elif [[ "$cache_warm" == "false" ]]; then
   line1+=("${DIM}cache${RESET} ${RED}cold${RESET}")
 fi
 
-# herdr の sidebar で $model, $effort, $ctx_* として表示する。statusline は描画のたびに
+# herdr の sidebar で $model, $effort, $ctx_*, $branch として表示する。statusline は描画のたびに
 # 呼ばれるため、値が変わったときだけ background で送る
 if [[ -n "$HERDR_PANE_ID" ]] && command -v herdr >/dev/null; then
   # sidebar の数値の rules は % 付きの値に一致しないため、使用率を閾値ごとの token に振り分け、
@@ -272,7 +272,7 @@ if [[ -n "$HERDR_PANE_ID" ]] && command -v herdr >/dev/null; then
   fi
   # agent 名の代わりに Nerd Fonts の cod-claude を表示する
   display_agent=$''
-  herdr_payload="${display_agent}	${model}	${effort}	${ctx_low}	${ctx_mid}	${ctx_high}"
+  herdr_payload="${display_agent}	${model}	${effort}	${ctx_low}	${ctx_mid}	${ctx_high}	${git_branch}"
   herdr_sent="${usage_cache_dir}/herdr-${HERDR_PANE_ID//[^A-Za-z0-9_-]/_}"
   if [[ "$(cat "$herdr_sent" 2>/dev/null)" != "$herdr_payload" ]]; then
     mkdir -p "$usage_cache_dir"
@@ -282,6 +282,7 @@ if [[ -n "$HERDR_PANE_ID" ]] && command -v herdr >/dev/null; then
       --display-agent "$display_agent" \
       --token "model=${model}" --token "effort=${effort}" \
       --token "ctx_low=${ctx_low}" --token "ctx_mid=${ctx_mid}" --token "ctx_high=${ctx_high}" \
+      --token "branch=${git_branch}" \
       </dev/null >/dev/null 2>&1 &
     disown
   fi

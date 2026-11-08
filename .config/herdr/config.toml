@@ -424,7 +424,7 @@ rows = [
 ]
 # Optional canonical agent IDs replace the default rows for matching agents.
 [ui.sidebar.agents.rows_by_agent]
-# $model, $effort, $ctx_* は Claude Code の statusline から送る。色は statusline と同じ基準にする。
+# $model, $effort, $ctx_*, $branch は Claude Code の statusline から送る。色は statusline と同じ基準にする。
 # $ctx_low, $ctx_mid, $ctx_high は context 使用率を閾値ごとに振り分けた token で、値を持つのは常に 1 つ
 claude = [
   [
@@ -434,9 +434,10 @@ claude = [
       { equals = "server", fg = "#e5c07b" },
     ] },
     "workspace",
+    "$branch",
   ],
-  # herdr-auto-title はディレクトリと branch が workspace 名と違うときにタブ名にだけ付けるため、pane ではなく tab を出す
-  ["tab"],
+  # tab は状態の記号や branch も含むため、herdr-auto-title が付けた作業内容だけの pane 名を出す
+  ["pane"],
   [
     { token = "agent", fg = "#d97757" },
     { token = "$model", rules = [
