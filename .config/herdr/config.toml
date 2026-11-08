@@ -409,14 +409,34 @@ status_indicators = "symbols"
 [ui.sidebar.agents]
 # Blank rows between agent entries. Set to 1 to restore the previous spacing.
 # row_gap = 0
-rows = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+# マシン名は Local と server で色を分け、手元のマシンの agent は太字にして目立たせる
+rows = [
+  [
+    "state_icon",
+    { token = "machine", rules = [
+      { equals = "Local", fg = "#61afef", bold = true },
+      { equals = "server", fg = "#e5c07b" },
+    ] },
+    "workspace",
+  ],
+  ["tab"],
+  ["agent"],
+]
 # Optional canonical agent IDs replace the default rows for matching agents.
 [ui.sidebar.agents.rows_by_agent]
 # $model, $effort, $ctx_* は Claude Code の statusline から送る。色は statusline と同じ基準にする。
 # $ctx_low, $ctx_mid, $ctx_high は context 使用率を閾値ごとに振り分けた token で、値を持つのは常に 1 つ
 claude = [
-  ["state_icon", "machine", "workspace", "tab"],
-  ["terminal_title_stripped"],
+  [
+    "state_icon",
+    { token = "machine", rules = [
+      { equals = "Local", fg = "#61afef", bold = true },
+      { equals = "server", fg = "#e5c07b" },
+    ] },
+    "workspace",
+  ],
+  # herdr-auto-title はディレクトリと branch が workspace 名と違うときにタブ名にだけ付けるため、pane ではなく tab を出す
+  ["tab"],
   [
     { token = "agent", fg = "#d97757" },
     { token = "$model", rules = [
@@ -442,10 +462,15 @@ claude = [
 # Expanded space rows. Built-ins are state_icon, state_text, workspace, branch, and git_status.
 # Custom values reported through workspace metadata use a $name token, for example $jj_status.
 # Inline token styles accept strict #RGB/#RRGGBB foregrounds plus bold and dim booleans.
-# [ui.sidebar.spaces]
+[ui.sidebar.spaces]
 # Blank rows between space entries. Set to 1 to restore the previous spacing.
 # row_gap = 0
 # rows = [["state_icon", "workspace"], ["branch", "git_status"]]
+# $topic は herdr-auto-title が送る、workspace のアクティブなタブの作業内容
+rows = [
+  ["state_icon", "workspace", "branch", "git_status"],
+  [{ token = "$topic", bold = true, dim = false }],
+]
 
 # Background notification popup delivery
 [ui.toast]
