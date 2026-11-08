@@ -242,7 +242,7 @@ ${observedBlock(observed)}
 4. A のとき: レビューコメントの有無によらず、依頼範囲に入る次の作業も行う
    - CI の失敗の修正
    - mergeStateStatus が DIRTY (conflict) のとき: base を取り込んで conflict を解消し、local の test を通して push する。どちらの変更を残すかに判断が要るときは解消せず、conflict の箇所を報告する
-   - mergeStateStatus が BEHIND で reviewDecision が APPROVED のとき: base を取り込み、local の test を通して push する
+   - mergeStateStatus が BEHIND で reviewDecision が APPROVED のとき: base を取り込んで push する。検証は CI に任せ、local の test は実行しない
    - PR description と差分の食い違いの修正、QA の証跡の不足の補充
    上の 2 つの条件に当たらなければ、base が進んでいても base を取り込まない
 5. B と D のとき: 何も変更せず、待っている内容を 1 行で報告して終わる

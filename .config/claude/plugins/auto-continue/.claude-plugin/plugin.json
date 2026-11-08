@@ -1,6 +1,6 @@
 {
   "name": "auto-continue",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "放置中の session の状態を判定し、外部の進行待ちや作業の途中なら続きを促す文言を投稿し、完了したら片付けを依頼する",
   "types": "./types/index.d.ts"
 }
