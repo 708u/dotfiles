@@ -2,7 +2,7 @@
 name: spawn-worktree-task
 description: >-
   セッションの文脈から別の作業を切り出し、新しい worktree の herdr workspace で Claude Code を起動して prompt を渡す。herdr machine に保存したリモートのマシンでも起動できる。「worktree で別タスクを始めて」「この作業を別の Claude に任せて」「spawn worktree」「リモートのマシンに任せて」「server で worker を動かして」で使用。
-argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>]"
+argument-hint: "[切り出す作業の指定...] [with /command...] [on <machine>]"
 ---
 
 # spawn-worktree-task
@@ -13,13 +13,14 @@ argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>
 
 ## 引数（すべてオプション）
 
-- ブランチ名は指定がなければ自動推察する
-- 指示内容は指定がなければセッションの文脈から推察する
+- 切り出す作業の指定は、セッションで話していた内容のうちどれを切り出すかを自然文で書く。指示内容はこの指定をもとにセッションの文脈から組み立てる。指定がなければセッションの文脈全体から推察する
+  - 例: `/spawn-worktree-task 話していた引数の説明の修正`
+- ブランチ名は切り出す作業の内容から推察する。引数にブランチ名が明示されている場合のみそれを使う
 - `with /command` 形式でコマンドを指定すると、prompt内でそのコマンドを呼び出す
-  - 例: `/spawn-worktree-task feat/new with /prepare-pr`
+  - 例: `/spawn-worktree-task 話していた引数の説明の修正 with /prepare-pr`
   - 複数指定可: `with /command1 /command2`
 - `on <machine>` 形式で herdr machine のラベルかIDを指定すると、そのマシンで起動する（remote mode）
-  - 例: `/spawn-worktree-task feat/new on server`
+  - 例: `/spawn-worktree-task 話していた引数の説明の修正 on server`
   - 複数のタスクを別々のマシンに分ける場合は、タスクごとにこのskillを実行する
 
 ## remote mode の前提
@@ -43,14 +44,14 @@ argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>
 
 ### 1. ブランチ名の決定
 
-引数でブランチ名が指定されていない場合は、以下の手順で決定する。
+引数にブランチ名が明示されていない場合は、以下の手順で決定する。
 
-1. 現在のセッションの作業内容（会話履歴）を確認する
+1. 現在のセッションの作業内容（会話履歴）を確認する。引数で切り出す作業が指定されていれば、その作業に絞る
 2. git statusの変更ファイルから作業内容を推察する
 3. Conventional Commits形式のprefixを使用してブランチ名を決定する
    - 形式は `<prefix>/<kebab-case-name>`
    - 例: `feat/add-user-auth`, `refactor/config-loader`
-4. 以下の条件を満たす場合は確認なしでブランチ名を決定する
+4. 引数で切り出す作業が指定されている場合、または以下の条件をすべて満たす場合は確認なしでブランチ名を決定する
    - セッション内で1つのタスクのみ議論している
    - 変更ファイルが1つの機能領域に集中している
    - 目的が明確である（機能追加/バグ修正/リファクタリング等）
@@ -61,9 +62,9 @@ argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>
 
 ### 2. 指示内容の決定
 
-引数で指示内容が指定されていない場合は、以下の手順で決定する。
+以下の手順で決定する。引数で切り出す作業が指定されている場合も、指示内容はセッションの文脈から組み立てる。
 
-1. 現在のセッションの作業内容（会話履歴）を確認する
+1. 現在のセッションの作業内容（会話履歴）を確認する。引数で切り出す作業が指定されていれば、その作業に関する内容を集める
 2. git statusの変更ファイルから作業内容を推察する
 3. セッション中にplan modeで設計した計画ファイルがあるか確認する
    - 計画ファイルがある場合、ファイルパスではなく**内容全体**をニュアンスを変えずにそのまま指示に含める
@@ -84,7 +85,7 @@ argument-hint: "[branch-name] [指示内容...] [with /command...] [on <machine>
    - 編集対象ファイル（必須）: `@path/to/file` 形式のファイル参照
 6. ユーザーへの確認が必要かを判定する。以下の条件で確認をスキップでき、該当しない場合のみAskUserQuestionで確認する
    - 確認なしで進める条件（いずれか1つ以上を満たす）:
-     - 引数で指示内容が明示的に渡されている
+     - 引数で切り出す作業が指定され、セッションの会話からその作業を特定できる
      - セッション中にplan modeで計画を策定済みである
      - セッションの会話から単一の明確なタスクが特定でき、かつ編集対象ファイルも特定できている
    - 確認が必要な条件（いずれか1つでも該当すれば確認する）:
