@@ -14,11 +14,11 @@ const POLL_INTERVAL = 30 * 1000;
 
 const warmth = atom(
   { plugin: "cache-keepalive", key: "warmth" } as const,
-  null
+  null,
 );
 const isTurnRunning = atom(
   { plugin: "cache-keepalive", key: "isTurnRunning" } as const,
-  false
+  false,
 );
 
 let lastEditAt = 0;
@@ -76,14 +76,12 @@ async function tick($: EngineInterface) {
       if (reply.isAnswered || reply.reason === "nothing-to-fork") {
         // 当たらなかった cache を延長し続けても費用だけかかるため、次の main の応答まで止める
         await update($, warmth, () => null);
-        $.ui.status(undefined);
       }
       return;
     }
-    const next = await update($, warmth, (w) =>
-      w === null ? w : { ...w, refreshedAt: now, forks: w.forks + 1 }
+    await update($, warmth, (w) =>
+      w === null ? w : { ...w, refreshedAt: now, forks: w.forks + 1 },
     );
-    if (next !== null) $.ui.status(`cache keepalive ${next.forks}`);
   } finally {
     isForking = false;
   }
@@ -104,10 +102,25 @@ export const register: Register = (on, options) => {
       tick($).catch((error) =>
         $.ui.log(`cache-keepalive: tick failed (${String(error)})`, {
           to: "debug",
-        })
-      )
+        }),
+      ),
     );
+    // 状態は footer の mode 表示に出すため、status line に残った表示を消す
+    $.ui.status(undefined);
     return next(e);
+  });
+
+  // status line は警告の印付きで描かれるため、fork の回数は footer の dim な mode 表示に加える
+  on("ui.render", { component: "SessionMode" }, async ($, e, next) => {
+    const state = await read($, warmth);
+    if (state === null || state.forks === 0) return next(e);
+    return next({
+      ...e,
+      props: {
+        ...e.props,
+        modes: [...e.props.modes, `cache keepalive ${state.forks}`],
+      },
+    });
   });
 
   on("prompt.edit", ($, e, next) => {
@@ -158,7 +171,6 @@ export const register: Register = (on, options) => {
     };
     await update($, warmth, () => fresh);
     await update($, isTurnRunning, () => false);
-    $.ui.status(undefined);
     return next(e);
   });
 
@@ -172,7 +184,6 @@ export const register: Register = (on, options) => {
       result.messages !== undefined
     ) {
       await update($, warmth, () => null);
-      $.ui.status(undefined);
     }
     return result;
   }).catch(($, e, next) => next(e));

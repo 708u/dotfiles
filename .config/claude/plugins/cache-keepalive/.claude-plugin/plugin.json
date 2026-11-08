@@ -1,6 +1,6 @@
 {
   "name": "cache-keepalive",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "放置中に prompt cache の期限が近づいたら fork で読み直して期限を延ばす",
   "types": "./types/index.d.ts",
   "userConfig": {

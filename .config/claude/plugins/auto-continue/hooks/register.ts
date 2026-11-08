@@ -77,22 +77,33 @@ async function append($: EngineInterface, entry: Entry): Promise<void> {
   );
 }
 
-async function show($: EngineInterface): Promise<void> {
+function isStopped(m: Memory): boolean {
+  return m.isEnabled && m.stoppedReason !== null;
+}
+
+// 停止はユーザーの対応を要するため、警告として描かれる status line に出す
+async function showAlert($: EngineInterface): Promise<void> {
   const m = await read($, memory);
+  $.ui.status(isStopped(m) ? `停止 (${m.stoppedReason})` : undefined);
+}
+
+function modeLabel(m: Memory): string | null {
   if (!m.isEnabled) {
-    $.ui.status("off");
-  } else if (m.stoppedReason !== null) {
-    $.ui.status(`停止 (${m.stoppedReason})`);
-  } else if (m.verdict === "WAIT_EXTERNAL" && m.pr !== null) {
-    $.ui.status(`PR #${m.pr.number} を監視中`);
-  } else {
-    $.ui.status("待機中");
+    return "auto-continue: off";
   }
+  if (isStopped(m)) {
+    return null;
+  }
+  if (m.verdict === "WAIT_EXTERNAL" && m.pr !== null) {
+    return `auto-continue: PR #${m.pr.number} を監視中`;
+  }
+
+  return "auto-continue: 待機中";
 }
 
 async function stop($: EngineInterface, reason: string): Promise<string> {
   await update($, memory, (m) => ({ ...m, stoppedReason: reason }));
-  await show($);
+  await showAlert($);
 
   return `停止: ${reason}`;
 }
@@ -108,7 +119,6 @@ async function submit(
     ...patch,
     autoTurns: m.autoTurns + 1,
   }));
-  await show($);
   const result = await $.prompt.submit({ text });
   if (result.drop !== undefined) {
     isAutoInFlight = false;
@@ -284,7 +294,6 @@ async function decide($: EngineInterface, isForced: boolean): Promise<string> {
     const changes = describeChanges(latest.pr, pr);
     if (changes.length === 0) {
       await update($, memory, (one) => ({ ...one, verdict, pr }));
-      await show($);
 
       return "PR に変化が無いので投稿しない";
     }
@@ -334,7 +343,7 @@ export const register: Register = (on) => {
     timer = $.clock.every(TICK_MS, () => {
       void tick($, false);
     });
-    await show($);
+    await showAlert($);
 
     return result;
   });
@@ -356,7 +365,7 @@ export const register: Register = (on) => {
         autoTurns: 0,
         isCleanupSent: false,
       }));
-      await show($);
+      await showAlert($);
     }
 
     return result;
@@ -399,6 +408,19 @@ export const register: Register = (on) => {
     return result;
   });
 
+  // status line は警告の印付きで描かれるため、停止以外の状態は footer の dim な mode 表示に加える
+  on("ui.render", { component: "SessionMode" }, async ($, e, next) => {
+    const label = modeLabel(await read($, memory));
+    if (label === null) {
+      return next(e);
+    }
+
+    return next({
+      ...e,
+      props: { ...e.props, modes: [...e.props.modes, label] },
+    });
+  });
+
   on("command.run", { command: "auto-continue" }, async ($, e) => {
     const action = e.args.trim();
     if (action === "on" || action === "off") {
@@ -413,7 +435,7 @@ export const register: Register = (on) => {
         autoTurns: 0,
         lastActivityAt: now,
       }));
-      await show($);
+      await showAlert($);
 
       return { text: `auto-continue を ${action} にした` };
     }
