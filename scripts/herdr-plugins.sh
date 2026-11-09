@@ -15,17 +15,23 @@ if ! installed=$(herdr plugin list 2>/dev/null); then
   exit 0
 fi
 
-# install_plugin <plugin id> <owner/repo> <commit> <起動する action>
-# 導入直後は常駐プロセスが起動しないため、指定した action で起動する
+# install_plugin <plugin id> <owner/repo[/subdir]> <commit> [起動する action]
+# 導入直後は常駐プロセスが起動しないため、常駐プロセスを持つ plugin は
+# 指定した action で起動する
 install_plugin() {
-  local id=$1 repo=$2 commit=$3 start_action=$4
+  local id=$1 repo=$2 commit=$3 start_action=${4:-}
   if grep -q "^- ${id} " <<<"$installed"; then
     echo "${id} は導入済み"
     return
   fi
   herdr plugin install "$repo" --ref "$commit" -y
-  herdr plugin action invoke "$start_action" >/dev/null
+  if [[ -n $start_action ]]; then
+    herdr plugin action invoke "$start_action" >/dev/null
+  fi
 }
 
 install_plugin herdr.auto-title kryptamine/herdr-auto-title \
   d8603171bde954fa2db57bf6013c548daa6f58c1 herdr.auto-title.restart
+
+install_plugin furkankly.zoetrope furkankly/zoetrope/herdr-plugin \
+  b1f31dd26bd4e9e513885e39edb78d0850a5d1fe
