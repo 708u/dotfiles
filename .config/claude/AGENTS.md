@@ -159,12 +159,18 @@ twig で扱う主な操作:
 - 変更を別 branch へ移動 (carry)
 - merged worktree の削除
 
-herdr の pane 内 (`HERDR_ENV=1`) で `twig add` を実行したら、続けて `herdr worktree open --path <worktree> --no-focus` を実行し、作成した worktree を現在の repository の workspace 配下に表示する。
-
 理由:
 
 - branch 切り替え時に stash が不要になる
 - 複数 branch を並行して作業できる
+
+### 作成した worktree を herdr の workspace に表示する
+
+herdr の pane 内 (`HERDR_ENV=1`) で worktree を作ったら、続けて `herdr worktree open --path <worktree> --no-focus` を実行し、作成した worktree を現在の repository の workspace 配下に表示する。
+
+- 作る手段を問わない。`twig add` のほか、repository の規則で指定された script や `git worktree add` で作った worktree も対象とする
+- subagent に worktree を作らせるときは、作成直後に上の command を実行することを subagent への指示に含める。subagent は main session の文脈を引き継がないため、指示に無い手順は実行されない
+- 指示に含め忘れたときや subagent の実行を確かめられないときは、main session が `git worktree list` で作成済みの worktree を確かめて登録する
 
 ### ステージするファイルはパスで指定する
 
