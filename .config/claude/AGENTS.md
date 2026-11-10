@@ -112,7 +112,7 @@ GitHub の操作には gh CLI を使う。GitHub MCP は使わない。認証は
 
 PR を作成する前に、repository に PR template (`.github/pull_request_template.md` など) があるかを必ず確認する。ある場合は description をその template に沿って書く。見出しの名前と順序を変えず、各見出しのコメントで指示された内容を記入する。該当しない見出しも削除せず、該当しない旨を書く。
 
-編集するときは直前に `gh pr view <number> --json body -q '.body'` で最新版を取得し、他者 (ユーザー、レビュアー、bot) の追記を必ず引き継ぐ。確認なしの上書きは禁止。
+編集するときは直前に `gh pr view <number> --json body -q '.body'` で最新の本文を取得し、他者 (ユーザー、レビュアー、bot) の追記を必ず引き継ぐ。確認なしの上書きは禁止。
 
 PR が存在するブランチへ push したら、description を push 後のブランチの差分に合わせて更新する。レビュー指摘への対応で push したときも同様に更新する。変更内容の節だけでなく、ファイルパス、QA の項目と結果、変更しなかったことの記述も見直す。
 
