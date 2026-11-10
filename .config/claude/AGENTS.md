@@ -176,6 +176,19 @@ herdr の pane 内 (`HERDR_ENV=1`) で worktree を作ったら、続けて `her
 
 `git add -A` や `git add .` を使わない。`git status --short` で対象を確認し、変更したファイルをパスで列挙して add する。
 
+### commit は 1 つの意図ごとに分ける
+
+commit は、読み手が差分と message を照らし合わせて確認する単位とする。1 つの commit には 1 つの意図だけを含める。commit message の 1 行目に複数の対応を並べることになったら、commit を分ける。
+
+- レビュー指摘への対応は、指摘ごとに commit を分ける。返信にはその commit の hash を書き、差分がその指摘への対応だけになるようにする
+- 1 つの変更で複数の指摘が解消するときは 1 つの commit とし、それぞれの返信で同じ commit を示す
+- 整形・改名・移動など振る舞いを変えない変更は、振る舞いを変える変更と分ける
+
+理由:
+
+- 複数の対応をまとめた commit を返信で示しても、reviewer はどの差分がどの指摘への対応かを特定できない
+- 意図ごとに分かれた履歴は、後から経緯を調べる人や agent が文脈を特定しやすい
+
 ## multi-agent orchestration
 
 Orca orchestration は worker を起動して結果を待ち受ける作業にだけ使う。着手前に `orca skills get orchestration` でバージョンが一致した guide を読む。
