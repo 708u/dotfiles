@@ -6,6 +6,7 @@
     ./mise.nix
     ./shell.nix
     ./symlinks.nix
+    ./yazi.nix
   ];
 
   home.stateVersion = "24.11";

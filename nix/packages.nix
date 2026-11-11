@@ -73,7 +73,6 @@ in
     uv
     wget
     yarn
-    yazi
     zellij
     zoetrope
     zoxide
