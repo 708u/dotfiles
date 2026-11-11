@@ -52,6 +52,7 @@ in
     just
     lazydocker
     lsd
+    macism
     mutagen
     mutagen-compose
     mysql84

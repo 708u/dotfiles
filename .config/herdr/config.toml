@@ -200,7 +200,7 @@ command = 'exec ~/.config/herdr/open-workspace.sh'
 key = "prefix+g"
 type = "pane"
 description = "open yazi in the current directory"
-command = 'exec yazi "${HERDR_ACTIVE_PANE_CWD:-$PWD}"'
+command = 'macism com.google.inputmethod.Japanese.Roman; exec yazi "${HERDR_ACTIVE_PANE_CWD:-$PWD}"'
 
 # Size of the virtual terminal used when no client is attached.
 # Attached clients always use their own terminal size.
