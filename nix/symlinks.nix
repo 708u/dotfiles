@@ -44,6 +44,9 @@ in
     "herdr/config.toml" = {
       source = mkSymlink ".config/herdr/config.toml";
     };
+    "herdr/open-workspace.sh" = {
+      source = mkSymlink ".config/herdr/open-workspace.sh";
+    };
     # 手動で付けた名前の記録 (manual-names.json) も同じディレクトリに書き込まれるため、
     # ディレクトリではなく config.env だけを symlink にする
     "herdr-auto-title/config.env" = {

@@ -180,48 +180,14 @@ next_workspace = "prefix+period"
 # width = "80%"
 # height = "80%"
 
-# 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。
-# 先頭の現在のディレクトリは new_workspace と同じく常に新しく作る。
-# repository は既存の workspace があればそこへ移動し、ctrl-o のときは常に新しく作る。
-# ghq root 配下に置いた linked worktree も ghq list に出るため、.git がディレクトリのものだけを候補にする。
-# /bin/sh は bash 3.2 で、$( ) 内の case のパターンを ) で閉じると構文エラーになるため ( から書く
+# 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。tab で作成先の machine を切り替える。
 [[keys.command]]
 key = "prefix+n"
 type = "popup"
 width = "80%"
 height = "60%"
 description = "open workspace from current directory or ghq repository"
-command = '''
-root=$(ghq root)
-cwd=${HERDR_ACTIVE_PANE_CWD:-$PWD}
-open=$("$HERDR_BIN_PATH" workspace list | jq -r '[.result.workspaces[].worktree.checkout_path // empty | "|" + . + "|"] | join("")')
-# 種別、パス、表示の 3 列を tab 区切りで渡し、fzf には表示の列だけを見せる
-items=$(
-  printf 'cwd\t%s\t+ %s\n' "$cwd" "$cwd"
-  ghq list | while IFS= read -r r; do
-    [ -d "$root/$r/.git" ] || continue
-    case "$open" in (*"|$root/$r|"*) printf 'repo\t%s\t* %s\n' "$root/$r" "$r" ;; esac
-  done
-  ghq list | while IFS= read -r r; do
-    [ -d "$root/$r/.git" ] || continue
-    case "$open" in (*"|$root/$r|"*) ;; (*) printf 'repo\t%s\t  %s\n' "$root/$r" "$r" ;; esac
-  done
-)
-out=$(printf '%s\n' "$items" | fzf --prompt 'workspace> ' --delimiter '\t' --with-nth 3 --tiebreak index --expect ctrl-o \
-  --header 'enter: 開く (* は既存の workspace へ移動) / ctrl-o: 新しく作る') || exit 0
-key=$(printf '%s\n' "$out" | sed -n 1p)
-kind=$(printf '%s\n' "$out" | sed -n 2p | cut -f1)
-dir=$(printf '%s\n' "$out" | sed -n 2p | cut -f2)
-[ -n "$dir" ] || exit 0
-label=$(basename "$dir")
-if [ "$kind" = repo ] && [ "$key" != ctrl-o ]; then
-  id=$("$HERDR_BIN_PATH" workspace list | jq -r --arg d "$dir" '[.result.workspaces[] | select(.worktree.checkout_path == $d)][0].workspace_id // empty')
-  if [ -n "$id" ]; then
-    exec "$HERDR_BIN_PATH" workspace focus "$id"
-  fi
-fi
-exec "$HERDR_BIN_PATH" workspace create --cwd "$dir" --label "$label" --focus
-'''
+command = 'exec ~/.config/herdr/open-workspace.sh'
 
 # Legacy indexed shortcut config is still parsed for compatibility.
 # Prefer switch_tab, switch_workspace, and focus_agent for new configs.
