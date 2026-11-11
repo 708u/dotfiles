@@ -55,6 +55,9 @@ in
     "yazi/yazi.toml" = {
       source = mkSymlink ".config/yazi/yazi.toml";
     };
+    "yazi/plugins/send-to-agent.yazi" = {
+      source = mkSymlink ".config/yazi/plugins/send-to-agent.yazi";
+    };
     "glow/ayu-mirage.json" = {
       source = mkSymlink ".config/glow/ayu-mirage.json";
     };

@@ -2,3 +2,13 @@
 on   = "T"
 run  = "plugin toggle-pane max-preview"
 desc = "Maximize or restore the preview pane"
+
+[[mgr.prepend_keymap]]
+on   = "@"
+run  = "plugin send-to-agent"
+desc = "Send selected files with a comment to the agent pane"
+
+[[mgr.prepend_keymap]]
+on   = "C"
+run  = "plugin send-to-agent list"
+desc = "List comments sent to the agent pane"
