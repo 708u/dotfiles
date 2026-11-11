@@ -1,3 +1,20 @@
 [[plugin.prepend_previewers]]
 url = "*.md"
 run = 'piper -- CLICOLOR_FORCE=1 glow -w=$w -s="$HOME/.config/glow/ayu-mirage.json" "$1"'
+
+# glow -p は PAGER を使い、less に -R がないと色の制御文字がそのまま表示されるため、glow 自身の TUI で開く
+[opener]
+glow = [
+	{ run = 'glow -t -s="$HOME/.config/glow/ayu-mirage.json" %s1', desc = "glow", block = true },
+]
+view = [
+	{ run = 'bat --paging=always %s1', desc = "bat", block = true },
+]
+
+# 編集は agent に任せるため、Enter では閲覧用に開き、編集用の opener は O の一覧にだけ残す
+[open]
+prepend_rules = [
+	{ url = "*.md", use = [ "glow", "view", "edit", "reveal" ] },
+	{ mime = "text/*", use = [ "view", "edit", "reveal" ] },
+	{ mime = "application/{json,ndjson,javascript,wine-extension-ini}", use = [ "view", "edit", "reveal" ] },
+]
