@@ -60,7 +60,25 @@
       "inputs": {
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "zoetrope": "zoetrope"
+      }
+    },
+    "zoetrope": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794387269,
+        "narHash": "sha256-9e23v2j47k+mmslHYE0vzpsIJD7wEC+YtOZea8b/vWg=",
+        "owner": "708u",
+        "repo": "zoetrope",
+        "rev": "1964d016c8f5a5fe3fe2c22a4fc11c5d6e9f0d52",
+        "type": "github"
+      },
+      "original": {
+        "owner": "708u",
+        "ref": "feat/wrap-layout",
+        "repo": "zoetrope",
+        "type": "github"
       }
     }
   },

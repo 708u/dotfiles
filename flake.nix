@@ -11,6 +11,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # 上流に無い配置の変更を含めた fork の branch から zoe を build する
+    zoetrope = {
+      url = "github:708u/zoetrope/feat/wrap-layout";
+      flake = false;
+    };
   };
 
   outputs =
@@ -37,7 +42,7 @@
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.extraSpecialArgs = { inherit dotfilesDir; };
+              home-manager.extraSpecialArgs = { inherit dotfilesDir inputs; };
               home-manager.users.${username} = import ./nix/home.nix;
             }
           ]
