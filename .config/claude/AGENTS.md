@@ -154,6 +154,11 @@ CI jobやworkflow自体を修正した場合のみ適用。通常のコード変
 
 自分がClaude Codeであることをcommentに含める。
 
+commit hash の前には半角スペースを置く。直前に句点などの文字があると、GitHub が hash を commit への link に変換しない。
+
+- 悪い例: `ご指摘ありがとうございます。abc1234 で対応しました。`
+- 良い例: `ご指摘ありがとうございます。 abc1234 で対応しました。`
+
 ## git操作
 
 ### branch 作成時は twig を使う
