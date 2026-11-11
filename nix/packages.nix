@@ -71,7 +71,6 @@ in
     tree
     trufflehog
     uv
-    vscode
     wget
     yarn
     yazi
