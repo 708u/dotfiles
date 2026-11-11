@@ -37,7 +37,6 @@
       "appcleaner"
       "asana"
       "claude"
-      "cmux"
       "chrome-remote-desktop-host"
       "cyberduck"
       "discord"
