@@ -5,7 +5,7 @@ run = 'piper -- CLICOLOR_FORCE=1 glow -w=$w -s="$HOME/.config/glow/ayu-mirage.js
 # glow -p は PAGER を使い、less に -R がないと色の制御文字がそのまま表示されるため、glow 自身の TUI で開く
 [opener]
 glow = [
-	{ run = 'glow -t -s="$HOME/.config/glow/ayu-mirage.json" %s1', desc = "glow", block = true },
+	{ run = 'glow -t -l -s="$HOME/.config/glow/ayu-mirage.json" %s1', desc = "glow", block = true },
 ]
 view = [
 	{ run = 'bat --paging=always %s1', desc = "bat", block = true },
