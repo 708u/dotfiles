@@ -17,6 +17,7 @@ abbr -f -q git-softreset='git reset --soft HEAD~1'
 abbr -f -q hp='git push -u origin HEAD'
 
 # tools
+abbr -f -q h='herdr'
 abbr -f -q j='just'
 abbr -f -q tf='terraform'
 abbr -f -q la='lsd -a'
