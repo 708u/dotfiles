@@ -52,6 +52,12 @@ in
     "yazi/keymap.toml" = {
       source = mkSymlink ".config/yazi/keymap.toml";
     };
+    "yazi/yazi.toml" = {
+      source = mkSymlink ".config/yazi/yazi.toml";
+    };
+    "glow/ayu-mirage.json" = {
+      source = mkSymlink ".config/glow/ayu-mirage.json";
+    };
     # 手動で付けた名前の記録 (manual-names.json) も同じディレクトリに書き込まれるため、
     # ディレクトリではなく config.env だけを symlink にする
     "herdr-auto-title/config.env" = {
