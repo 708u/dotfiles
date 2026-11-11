@@ -195,11 +195,10 @@ command = 'exec ~/.config/herdr/open-workspace.sh'
 # workspaces = "" # e.g. "ctrl+shift" makes ctrl+shift+1..9 switch workspaces directly
 # agents = ""     # e.g. "alt" makes alt+1..9 focus agent rows directly
 
+# popup の表示中は、prefix を含むすべてのキーが popup に送られるため、prefix を使える zoom した pane で開く
 [[keys.command]]
 key = "prefix+g"
-type = "popup"
-width = "95%"
-height = "95%"
+type = "pane"
 description = "open yazi in the current directory"
 command = 'exec yazi "${HERDR_ACTIVE_PANE_CWD:-$PWD}"'
 
