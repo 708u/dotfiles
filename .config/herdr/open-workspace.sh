@@ -36,13 +36,15 @@ machines() {
 # ghq list は ghq root 以下をすべて走査して popup の表示が遅くなるため、host/owner/repo の階層にある
 # .git ディレクトリを glob で探す。linked worktree は .git がファイルなので含まれない。
 # remote でも実行するため、展開は実行する側の shell に任せる。
+# ghq root は呼び出しに時間がかかるため、呼び出し側で求めた値を ghq_root で受け取れるようにする。
 # shellcheck disable=SC2016
-repos_script='root=$(ghq root) && for g in "$root"/*/*/*/.git/; do [ -d "$g" ] || continue; d=${g%/.git/}; printf "%s\t%s\n" "$d" "${d#"$root"/}"; done'
+repos_script='root=${ghq_root:-$(ghq root)} && for g in "$root"/*/*/*/.git/; do [ -d "$g" ] || continue; d=${g%/.git/}; printf "%s\t%s\n" "$d" "${d#"$root"/}"; done'
 
+# 表示中の machine では、第 2 引数に ghq root を渡す。
 repos() {
   local machine=$1 target out
   if [[ -z $machine ]]; then
-    sh -c "$repos_script"
+    ghq_root=$2 sh -c "$repos_script"
     return
   fi
   target=$("$herdr_bin" machine list --json | jq -r --arg m "$machine" '.[] | select(.label == $m) | .target' | head -1)
@@ -64,17 +66,28 @@ cwd_repo() {
   case "$dir" in ("$root"/*) printf '%s\n' "${dir#"$root"/}" ;; esac
 }
 
+# 現在のディレクトリを表示用に短縮する。ghq root 配下は repository の行と表記を揃えて相対パスにする。
+cwd_label() {
+  local root=$1
+  case "$cwd" in
+    ("$root"/*) printf '%s\n' "${cwd#"$root"/}" ;;
+    ("$HOME" | "$HOME"/*) printf '~%s\n' "${cwd#"$HOME"}" ;;
+    (*) printf '%s\n' "$cwd" ;;
+  esac
+}
+
 # 種別、パス、表示の 3 列を tab 区切りで出力する。fzf には表示の列だけを見せる。
 # 表示中の machine では現在のディレクトリを先頭に置く。
 # 別の machine では、現在のディレクトリと同じ repository を先頭に置き、enter だけで選べるようにする。
 list() {
-  local machine=$1 all pin="" path name
+  local machine=$1 all pin="" path name root=""
   if [[ -z $machine ]]; then
-    printf 'cwd\t%s\t+ %s\n' "$cwd" "$cwd"
+    root=$(ghq root)
+    printf 'cwd\t%s\t+ %s\n' "$cwd" "$(cwd_label "$root")"
   else
     pin=$(cwd_repo)
   fi
-  if ! all=$(repos "$machine"); then
+  if ! all=$(repos "$machine" "$root"); then
     printf 'error\t\t! %s に接続できない\n' "$machine"
     return
   fi
