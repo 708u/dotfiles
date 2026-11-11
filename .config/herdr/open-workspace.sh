@@ -32,11 +32,12 @@ machines() {
   "$herdr_bin" machine list --json | jq -r '.[] | select(.enabled) | .label'
 }
 
-# repository の絶対パスと ghq list の名前を tab 区切りで出力する。
-# ghq root 配下に置いた linked worktree も ghq list に出るため、.git がディレクトリのものだけを出す。
+# repository の絶対パスと ghq list と同じ形式の名前を tab 区切りで出力する。
+# ghq list は ghq root 以下をすべて走査して popup の表示が遅くなるため、host/owner/repo の階層にある
+# .git ディレクトリを glob で探す。linked worktree は .git がファイルなので含まれない。
 # remote でも実行するため、展開は実行する側の shell に任せる。
 # shellcheck disable=SC2016
-repos_script='root=$(ghq root) && ghq list | while IFS= read -r r; do if [ -d "$root/$r/.git" ]; then printf "%s\t%s\n" "$root/$r" "$r"; fi; done'
+repos_script='root=$(ghq root) && for g in "$root"/*/*/*/.git/; do [ -d "$g" ] || continue; d=${g%/.git/}; printf "%s\t%s\n" "$d" "${d#"$root"/}"; done'
 
 repos() {
   local machine=$1 target out
@@ -46,9 +47,10 @@ repos() {
   fi
   target=$("$herdr_bin" machine list --json | jq -r --arg m "$machine" '.[] | select(.label == $m) | .target' | head -1)
   [[ -n $target ]] || return 1
+  # remote の login shell が zsh だと、glob に一致するものが無いときにエラーになるため、sh に標準入力で渡す。
   # remote の shell の設定によって端末の制御文字が出力に混ざるため、先頭で改行して
   # 制御文字を別の行に分け、パスで始まる行だけを残す。
-  out=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$target" "printf '\n'; $repos_script" 2>/dev/null) || return 1
+  out=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$target" "printf '\n'; exec sh -s" <<<"$repos_script" 2>/dev/null) || return 1
   grep '^/' <<<"$out" || true
 }
 
