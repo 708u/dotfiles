@@ -85,7 +85,6 @@ split_vertical = "prefix+d"
 split_horizontal = "prefix+shift+d"
 # prefix+n は現在のディレクトリと ghq の repository を選ぶ popup に使う
 new_workspace = "prefix+shift+n"
-close_pane = "prefix+w"
 close_workspace = "prefix+shift+w"
 workspace_picker = "prefix+p"
 goto = "prefix+f"
