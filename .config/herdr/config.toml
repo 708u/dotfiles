@@ -183,7 +183,6 @@ next_workspace = "prefix+period"
 # 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。
 # 先頭の現在のディレクトリは new_workspace と同じく常に新しく作る。
 # repository は既存の workspace があればそこへ移動し、ctrl-o のときは常に新しく作る。
-# tab のときは workspace 名を入力させ、その名前で常に新しく作る。
 # ghq root 配下に置いた linked worktree も ghq list に出るため、.git がディレクトリのものだけを候補にする。
 # /bin/sh は bash 3.2 で、$( ) 内の case のパターンを ) で閉じると構文エラーになるため ( から書く
 [[keys.command]]
@@ -208,21 +207,13 @@ items=$(
     case "$open" in (*"|$root/$r|"*) ;; (*) printf 'repo\t%s\t  %s\n' "$root/$r" "$r" ;; esac
   done
 )
-while :; do
-  out=$(printf '%s\n' "$items" | fzf --prompt 'workspace> ' --delimiter '\t' --with-nth 3 --tiebreak index --expect ctrl-o,tab \
-    --header 'enter: 開く (* は既存の workspace へ移動) / ctrl-o: 新しく作る / tab: 名前を付けて新しく作る') || exit 0
-  key=$(printf '%s\n' "$out" | sed -n 1p)
-  kind=$(printf '%s\n' "$out" | sed -n 2p | cut -f1)
-  dir=$(printf '%s\n' "$out" | sed -n 2p | cut -f2)
-  [ -n "$dir" ] || exit 0
-  label=$(basename "$dir")
-  [ "$key" = tab ] || break
-  # shell の read は esc で中断できないため、名前の入力も fzf で受け、esc のときは一覧に戻る
-  name=$(: | fzf --prompt 'name> ' --header "enter: $label/<name> で作る (空のときは $label) / esc: 一覧に戻る" --bind 'enter:accept-or-print-query') || continue
-  # agent の一覧には workspace 名しか出ないため、どの repository か分かるよう先頭にディレクトリ名を残す
-  [ -n "$name" ] && label="$label/$name"
-  exec "$HERDR_BIN_PATH" workspace create --cwd "$dir" --label "$label" --focus
-done
+out=$(printf '%s\n' "$items" | fzf --prompt 'workspace> ' --delimiter '\t' --with-nth 3 --tiebreak index --expect ctrl-o \
+  --header 'enter: 開く (* は既存の workspace へ移動) / ctrl-o: 新しく作る') || exit 0
+key=$(printf '%s\n' "$out" | sed -n 1p)
+kind=$(printf '%s\n' "$out" | sed -n 2p | cut -f1)
+dir=$(printf '%s\n' "$out" | sed -n 2p | cut -f2)
+[ -n "$dir" ] || exit 0
+label=$(basename "$dir")
 if [ "$kind" = repo ] && [ "$key" != ctrl-o ]; then
   id=$("$HERDR_BIN_PATH" workspace list | jq -r --arg d "$dir" '[.result.workspaces[] | select(.worktree.checkout_path == $d)][0].workspace_id // empty')
   if [ -n "$id" ]; then
