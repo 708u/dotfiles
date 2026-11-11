@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。
+# 現在のディレクトリか ghq で管理している repository を選んで、新しい workspace を作る。
 # 作成先は表示中の machine (この script を実行している herdr server) を既定とし、
 # tab で herdr machine に保存した machine へ順に切り替える。
 #
-# 先頭の現在のディレクトリは new_workspace と同じく常に新しく作る。表示中の machine のときだけ出す。
-# repository は既存の workspace があればそこへ移動し、ctrl-o のときは常に新しく作る。
-#
-# 別の machine の workspace へは client の表示を移せないため、作成または既存の確認を通知し、
-# 移動は goto に任せる。
+# 既存の workspace への移動は workspace picker と goto に任せ、ここでは常に新しく作る。
+# 別の machine に作ったときは client の表示を移せないため、作成したことを通知する。
 #
 # usage: open-workspace.sh
 #        open-workspace.sh list <state-file>   fzf の候補を出力する
@@ -69,29 +66,23 @@ cwd_repo() {
 # 表示中の machine では現在のディレクトリを先頭に置く。
 # 別の machine では、現在のディレクトリと同じ repository を先頭に置き、enter だけで選べるようにする。
 list() {
-  local machine=$1 open all pin="" path name pass
+  local machine=$1 all pin="" path name
   if [[ -z $machine ]]; then
     printf 'cwd\t%s\t+ %s\n' "$cwd" "$cwd"
   else
     pin=$(cwd_repo)
   fi
-  if ! all=$(repos "$machine") || ! open=$(herdr_at "$machine" workspace list 2>/dev/null |
-    jq -r '[.result.workspaces[].worktree.checkout_path // empty | "|" + . + "|"] | join("")'); then
+  if ! all=$(repos "$machine"); then
     printf 'error\t\t! %s に接続できない\n' "$machine"
     return
   fi
   [[ -n $all ]] || return 0
-  # 先頭に置く repository、既存の workspace がある repository、それ以外の順に出す。
-  for pass in pin open rest; do
-    while IFS="$tab" read -r path name; do
-      if [[ -n $pin && $name == "$pin" ]]; then
-        [[ $pass == pin ]] || continue
-      else
-        case "$open" in (*"|$path|"*) [[ $pass == open ]] || continue ;; (*) [[ $pass == rest ]] || continue ;; esac
-      fi
-      case "$open" in (*"|$path|"*) printf 'repo\t%s\t* %s\n' "$path" "$name" ;; (*) printf 'repo\t%s\t  %s\n' "$path" "$name" ;; esac
-    done <<<"$all"
-  done
+  while IFS="$tab" read -r path name; do
+    [[ -n $pin && $name == "$pin" ]] && printf 'repo\t%s\t  %s\n' "$path" "$name"
+  done <<<"$all"
+  while IFS="$tab" read -r path name; do
+    [[ -n $pin && $name == "$pin" ]] || printf 'repo\t%s\t  %s\n' "$path" "$name"
+  done <<<"$all"
 }
 
 next() {
@@ -136,31 +127,17 @@ while :; do
   # 接続できない行を選んだときは、選んでいた machine の候補を出し直す。
   machine=$(cat "$state")
   out=$(list "$machine" | fzf --prompt "$(prompt "$state")" --delimiter '\t' --with-nth 3 --tiebreak index \
-    --expect ctrl-o \
     --bind "tab:execute-silent('$self' next '$state')+reload('$self' list '$state')+transform-prompt('$self' prompt '$state')" \
-    --header 'enter: 開く (* は既存の workspace へ移動) / ctrl-o: 新しく作る / tab: 作成先の machine を切り替える') || exit 0
+    --header 'enter: 新しく作る / tab: 作成先の machine を切り替える') || exit 0
   machine=$(cat "$state")
-  key=$(sed -n 1p <<<"$out")
-  kind=$(sed -n 2p <<<"$out" | cut -f1)
-  dir=$(sed -n 2p <<<"$out" | cut -f2)
+  kind=$(cut -f1 <<<"$out")
+  dir=$(cut -f2 <<<"$out")
   [[ $kind == error ]] || break
 done
 # 以降は exec で終わり EXIT の trap が実行されないため、ここで消す。
 rm -f "$state"
 [[ -n $dir ]] || exit 0
 label=$(basename "$dir")
-
-if [[ $kind == repo && $key != ctrl-o ]]; then
-  id=$(herdr_at "$machine" workspace list | jq -r --arg d "$dir" '[.result.workspaces[] | select(.worktree.checkout_path == $d)][0].workspace_id // empty')
-  if [[ -n $id ]]; then
-    if [[ -z $machine ]]; then
-      exec "$herdr_bin" workspace focus "$id"
-    fi
-    # 作成先の server で focus しておくと、その machine を選んだときにこの workspace が開く。
-    herdr_at "$machine" workspace focus "$id" >/dev/null
-    exec "$herdr_bin" notification show "$machine の $label は既に開いている" --body 'goto で移動できる'
-  fi
-fi
 
 if [[ -z $machine ]]; then
   exec "$herdr_bin" workspace create --cwd "$dir" --label "$label" --focus

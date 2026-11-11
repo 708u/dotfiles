@@ -180,7 +180,7 @@ next_workspace = "prefix+period"
 # width = "80%"
 # height = "80%"
 
-# 現在のディレクトリか ghq で管理している repository を選んで workspace を開く。tab で作成先の machine を切り替える。
+# 現在のディレクトリか ghq で管理している repository を選んで、新しい workspace を作る。tab で作成先の machine を切り替える。
 [[keys.command]]
 key = "prefix+n"
 type = "popup"
