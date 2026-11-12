@@ -10,6 +10,13 @@
     initContent = lib.mkMerge [
       (lib.mkBefore ''
         export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
+
+        # herdr の server が SSH のセッションで起動されたことに気づけるよう、pane が login keychain を読めないときに警告する。
+        # p10k の instant prompt を読み込んだ後にコンソールへ出力すると p10k が警告を出すため、instant prompt より前に判定して表示する
+        if [[ $HERDR_ENV == 1 ]] && ! /usr/bin/security show-keychain-info "$HOME/Library/Keychains/login.keychain-db" &>/dev/null; then
+            print -P "%F{yellow}login keychain を読めないため、gh や envchain が失敗します。herdr の server が SSH のセッションで起動された可能性があります。%f" >&2
+            print -P "%F{yellow}復旧: リモート側で herdr machine disable を実行して自動接続を止め、herdr server stop の後に GUI のターミナルで herdr を起動し直してください。%f" >&2
+        fi
       '')
       ''
         ZSH_CONF_DIR=${dotfilesDir}
