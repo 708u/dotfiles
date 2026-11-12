@@ -1,32 +1,5 @@
-{ lib, pkgs, username, ... }:
+{ lib, username, ... }:
 {
-  # ターミナルで herdr を開かなくても、ログイン後は herdr のセッションと plugin が動いているようにする。
-  # 別の herdr server がすでに動いていると、launchd が起動した方は socket が使用中のためすぐに終了し、
-  # 動いている server には影響しない。plugin は server の環境で起動するため PATH を明示する
-  launchd.user.agents.herdr-server.serviceConfig = {
-    ProgramArguments = [ "${pkgs.herdr}/bin/herdr" "server" ];
-    RunAtLoad = true;
-    KeepAlive = true;
-    ThrottleInterval = 30;
-    ProcessType = "Interactive";
-    EnvironmentVariables = {
-      LANG = "ja_JP.UTF-8";
-      SHELL = "/bin/zsh";
-      PATH = lib.concatStringsSep ":" [
-        "/etc/profiles/per-user/${username}/bin"
-        "/run/current-system/sw/bin"
-        "/nix/var/nix/profiles/default/bin"
-        "/opt/homebrew/bin"
-        "/usr/local/bin"
-        "/usr/bin"
-        "/bin"
-        "/usr/sbin"
-        "/sbin"
-      ];
-    };
-    StandardErrorPath = "/Users/${username}/Library/Logs/herdr-server.log";
-  };
-
   # このマシンは手元のマシンから remote で操作するため、シェルが OSC 11 を出して既定の背景色を変え、
   # 手元のマシンの端末と見分けられるようにする。既定色へ戻すプログラムもあるため precmd で出し直す。
   # ssh で直接つないだ端末では色が切断後も window に残るため、シェルの終了時に OSC 111 で既定色へ戻す

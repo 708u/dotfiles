@@ -1,6 +1,7 @@
 { username, hostname, ... }:
 {
   imports = [
+    ./herdr-server.nix
     ./homebrew.nix
     ./macos-defaults.nix
   ];
