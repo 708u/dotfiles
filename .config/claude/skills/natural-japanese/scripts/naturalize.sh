@@ -22,7 +22,7 @@ fi
 
 INPUT="$1"
 OUTPUT="$2"
-MODEL="${NATURALIZE_MODEL:-gemini-3.8-flash}"
+MODEL="${NATURALIZE_MODEL:-gemini-4-hydrogen}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
