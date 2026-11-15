@@ -133,4 +133,14 @@
         };
       };
     };
+
+    # activation は root で実行されるため、domain を絶対パスで指定してシステム全体の設定に書き込む
+    CustomSystemPreferences = {
+      # App Store が起動中の Tailscale を終了して更新すると、VPN が接続中の状態から進まないことがある。
+      # 自動更新を止め、MAS のアプリの更新は Tailscale の再接続まで行う手順に限る。
+      # NOTE: 更新は Makefile の UPGRADE_PACKAGES=1 で行う
+      "/Library/Preferences/com.apple.commerce" = {
+        AutoUpdate = false;
+      };
+    };
   };}
