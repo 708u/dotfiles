@@ -36,7 +36,6 @@ abbr -f -q ulk='security unlock-keychain ~/Library/Keychains/login.keychain-db'
 abbr -f -q c='claude'
 abbr -f -q cc='claude -c' &>/dev/null
 abbr -f -q cr='claude --resume'
-abbr -f -q cpl='claude --permission-mode plan'
 
 # zsh-syntax-highlighting integration
 # abbr を valid command と同じ色でハイライトする
