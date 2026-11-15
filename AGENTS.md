@@ -143,6 +143,12 @@ claude plugin install gopls-remote@gopls-remote
 claude plugin marketplace add \
   ./.config/claude/plugins/herdr-subagents
 claude plugin install herdr-subagents@herdr-subagents
+
+# Claude が人に見てほしい URL をブラウザで開く。
+# 708uServer では server.nix の OPEN_URL_SSH_HOST に ssh して開く
+claude plugin marketplace add \
+  ./.config/claude/plugins/open-url
+claude plugin install open-url@open-url
 ```
 
 ## 708uServer (手動セットアップ)

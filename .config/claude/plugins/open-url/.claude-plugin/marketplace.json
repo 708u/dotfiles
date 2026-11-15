@@ -1,0 +1,15 @@
+{
+  "name": "open-url",
+  "owner": {
+    "name": "708u",
+    "url": "https://github.com/708u"
+  },
+  "plugins": [
+    {
+      "name": "open-url",
+      "source": "./",
+      "description": "Claude が人に見てほしい URL を、その人が使っているマシンのブラウザで開く",
+      "version": "0.1.0"
+    }
+  ]
+}

@@ -1,15 +1,20 @@
 { lib, username, ... }:
 {
-  # このマシンは手元のマシンから remote で操作するため、シェルが OSC 11 を出して既定の背景色を変え、
-  # 手元のマシンの端末と見分けられるようにする。既定色へ戻すプログラムもあるため precmd で出し直す。
-  # ssh で直接つないだ端末では色が切断後も window に残るため、シェルの終了時に OSC 111 で既定色へ戻す
-  home-manager.users.${username}.programs.zsh.initContent = ''
-    _server_background() { printf '\e]11;#1e3034\e\\' }
-    _server_background_reset() { printf '\e]111\e\\' }
-    autoload -Uz add-zsh-hook
-    add-zsh-hook precmd _server_background
-    add-zsh-hook zshexit _server_background_reset
-  '';
+  home-manager.users.${username} = {
+    # このマシンは手元のマシンから remote で操作するため、シェルが OSC 11 を出して既定の背景色を変え、
+    # 手元のマシンの端末と見分けられるようにする。既定色へ戻すプログラムもあるため precmd で出し直す。
+    # ssh で直接つないだ端末では色が切断後も window に残るため、シェルの終了時に OSC 111 で既定色へ戻す
+    programs.zsh.initContent = ''
+      _server_background() { printf '\e]11;#1e3034\e\\' }
+      _server_background_reset() { printf '\e]111\e\\' }
+      autoload -Uz add-zsh-hook
+      add-zsh-hook precmd _server_background
+      add-zsh-hook zshexit _server_background_reset
+    '';
+
+    # Claude Code の open-url mod が URL を開くとき、このマシンではなく手元のマシンへ ssh して開く
+    home.sessionVariables.OPEN_URL_SSH_HOST = "main";
+  };
 
   # 更新のためにアプリを終了するパッケージがあり、remote 接続に使う Tailscale も終了したまま戻らないことがある。
   # このマシンは常に remote で操作するため、apply では既存のパッケージを更新せず、未導入のものの追加だけを行う。

@@ -1,0 +1,5 @@
+{
+  "name": "open-url",
+  "version": "0.1.0",
+  "description": "Claude が人に見てほしい URL を、その人が使っているマシンのブラウザで開く"
+}
