@@ -43,11 +43,6 @@
 
         ### End of Zinit's installer chunk
 
-        # Load local config
-        if [ -f $ZSH_CONF_DIR/zsh/.local.zsh ]; then
-            source $ZSH_CONF_DIR/zsh/.local.zsh
-        fi
-
         # Load zsh configs
         source $ZSH_CONF_DIR/zsh/alias.zsh
         source $ZSH_CONF_DIR/zsh/conf.zsh
@@ -56,6 +51,11 @@
         source $ZSH_CONF_DIR/zsh/abbr.zsh
         source $ZSH_CONF_DIR/zsh/p10k.zsh
         source $ZSH_CONF_DIR/zsh/fzf.zsh
+
+        # abbr を定義できるよう、zsh-abbr を読み込んだ後に source する
+        if [ -f $ZSH_CONF_DIR/zsh/.local.zsh ]; then
+            source $ZSH_CONF_DIR/zsh/.local.zsh
+        fi
       ''
     ];
   };
