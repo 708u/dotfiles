@@ -149,6 +149,12 @@ claude plugin install herdr-subagents@herdr-subagents
 claude plugin marketplace add \
   ./.config/claude/plugins/open-url
 claude plugin install open-url@open-url
+
+# natural-japanese で承認されていない日本語の書き込みと送信をブロックし、
+# Markdown と HTML に対して textlint を実行する
+claude plugin marketplace add \
+  ./.config/claude/plugins/natural-japanese-gate
+claude plugin install natural-japanese-gate@natural-japanese-gate
 ```
 
 ## 708uServer (手動セットアップ)
