@@ -26,7 +26,7 @@ if [ "${1:-}" = "--amend" ] && [ "$#" -eq 3 ]; then
     exit 1
   fi
   CHANGED="$(git diff --no-index --no-color --word-diff=porcelain --word-diff-regex=. "$BASE" "$FINAL" |
-    sed -n '/^@@/,$p' | grep -E '^[-+]' | perl -CS -ne 'chomp; $n += length($_) - 1; END { print $n + 0 }')"
+    sed -n '/^@@/,$p' | grep -E '^[-+]' | jq -Rn '[inputs | length - 1] | add // 0')"
   if [ "$CHANGED" -gt "$AMEND_MAX_CHARS" ]; then
     echo "変わった文字数 ($CHANGED) が多いため --amend では承認できません。英語の下書きから通し直してください" >&2
     exit 1
