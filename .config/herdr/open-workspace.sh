@@ -154,8 +154,9 @@ rm -f "$state"
 [[ -n $dir ]] || exit 0
 label=$(basename "$dir")
 
-if [[ -z $machine ]]; then
-  exec "$herdr_bin" workspace create --cwd "$dir" --label "$label" --focus
-fi
-herdr_at "$machine" workspace create --cwd "$dir" --label "$label" --focus >/dev/null || exit 1
+out=$(herdr_at "$machine" workspace create --cwd "$dir" --label "$label" --focus) || exit 1
+pane=$(jq -r '.result.root_pane.pane_id' <<<"$out")
+# c は claude に展開される abbr である。シェルの起動前に送信されても、入力内容のまま残り、プロンプトが表示された後に展開される。
+herdr_at "$machine" pane run "$pane" c >/dev/null || exit 1
+[[ -n $machine ]] || exit 0
 exec "$herdr_bin" notification show "$machine に $label を作成した" --body 'goto で移動できる'
