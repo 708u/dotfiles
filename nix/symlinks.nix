@@ -74,6 +74,9 @@ in
     ".claude/CLAUDE.md" = {
       source = mkSymlink ".config/claude/AGENTS.md";
     };
+    ".codex/AGENTS.md" = {
+      source = mkSymlink ".config/claude/AGENTS.md";
+    };
     # NOTE: .claude/settings.json は symlink 管理しない。Claude Code が
     # 一時ファイルの rename で書くため symlink がファイルごと消え、
     # 次の activation が clobber 検知で中断する
